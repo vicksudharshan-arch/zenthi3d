@@ -20,7 +20,7 @@ export const Route = createFileRoute("/upload")({
       {
         name: "description",
         content:
-          "Share a STEP file for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
+          "Share a STEP file (and optionally an STL) for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
       },
       { property: "og:title", content: "Upload a part file — Zenthi" },
       {
@@ -52,6 +52,7 @@ function UploadPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([emptyVehicle()]);
   const [notes, setNotes] = useState("");
   const [stepFile, setStepFile] = useState<File | null>(null);
+  const [stlFile, setStlFile] = useState<File | null>(null);
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -73,12 +74,17 @@ function UploadPage() {
     e.preventDefault();
     if (!licensed) return;
     if (!stepFile) {
-      toast.error("Attach a STEP file (.step or .stp).");
+      toast.error("A STEP file is required (.step or .stp).");
       return;
     }
     const stepExt = stepFile.name.split(".").pop()?.toLowerCase() ?? "";
     if (!["step", "stp"].includes(stepExt)) {
-      toast.error("Only .step or .stp files are accepted.");
+      toast.error("The STEP field only accepts .step or .stp files.");
+      return;
+    }
+    const stlExt = stlFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stlFile && stlExt !== "stl") {
+      toast.error("The STL field only accepts .stl files.");
       return;
     }
     const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
@@ -94,6 +100,7 @@ function UploadPage() {
     setSubmitting(true);
     try {
       const stepPath = await uploadFile(stepFile);
+      const stlPath = stlFile ? await uploadFile(stlFile) : null;
 
       const { error } = await supabase.from("parts").insert({
         name: name.trim(),
@@ -109,6 +116,9 @@ function UploadPage() {
         step_file_path: stepPath,
         step_file_name: stepFile.name,
         step_file_size: stepFile.size,
+        stl_file_path: stlPath,
+        stl_file_name: stlFile?.name ?? null,
+        stl_file_size: stlFile?.size ?? null,
         license_accepted: true,
         status: "pending",
       });
@@ -336,13 +346,32 @@ function UploadPage() {
                 }
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                STEP file — editable CAD. This is what machine shops need, and lets others modify
-                the design for their own fit.
+                Editable CAD file. This is what most machine shops need, and lets others modify the
+                design if they need a different fit.
+              </p>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="stlFile">
+                STL file (optional)
+              </label>
+              <input
+                id="stlFile"
+                type="file"
+                accept=".stl,model/stl"
+                onChange={(e) => setStlFile(e.target.files?.[0] ?? null)}
+                className={
+                  fieldCls +
+                  " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground"
+                }
+              />
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Ready-to-print mesh file, if you have one. Note it can't be easily edited like STEP
+                can.
               </p>
             </div>
             {!stepFile && (
               <p className="font-mono text-xs text-muted-foreground">
-                Attach a .step or .stp file to submit.
+                A STEP file (.step or .stp) is required to submit.
               </p>
             )}
 
