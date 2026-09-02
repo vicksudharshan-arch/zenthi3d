@@ -44,7 +44,56 @@ export const setPartStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const vehicleSchema = z.object({
+  make: z.string(),
+  model: z.string(),
+  yearFrom: z.string(),
+  yearTo: z.string(),
+});
+
+export const updatePart = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string(),
+        name: z.string().min(1),
+        description: z.string(),
+        category: z.string().min(1),
+        placement: z.string().nullable(),
+        material: z.string().nullable(),
+        thickness_infill: z.string().nullable(),
+        contributor_type: z.array(z.string()),
+        vehicles: z.array(vehicleSchema),
+        notes: z.string().nullable(),
+        uploader_name: z.string().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { id, ...patch } = data;
+    const { error } = await supabaseAdmin.from("parts").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteParts = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ ids: z.array(z.string()).min(1) }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("parts")
+      .select("file_path")
+      .in("id", data.ids);
+    const paths = (rows ?? []).map((r) => r.file_path).filter(Boolean);
+    if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
+    const { error } = await supabaseAdmin.from("parts").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, deleted: data.ids.length };
+  });
+
 export const getDownloadUrl = createServerFn({ method: "POST" })
+
   .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
