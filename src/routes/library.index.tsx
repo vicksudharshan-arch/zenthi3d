@@ -224,6 +224,10 @@ function LibraryPage() {
               <article
                 key={p.id}
                 id={`part-${p.id}`}
+                onDoubleClick={() =>
+                  setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                }
+                title="Double-click to preview the file"
                 className={
                   "flex flex-col rounded-sm border bg-card p-6 transition-colors " +
                   (sharedId === p.id ? "border-brass ring-2 ring-brass/30" : "border-border")
