@@ -213,13 +213,24 @@ function PartDetailPage() {
                 >
                   Copy link
                 </button>
-                <button
-                  onClick={download}
-                  disabled={downloading}
-                  className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {downloading ? "Preparing…" : "Download"}
-                </button>
+                {data.step_file_name && (
+                  <button
+                    onClick={() => download("step")}
+                    disabled={downloading === "step"}
+                    className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {downloading === "step" ? "Preparing…" : "Download STEP"}
+                  </button>
+                )}
+                {data.stl_file_name && (
+                  <button
+                    onClick={() => download("stl")}
+                    disabled={downloading === "stl"}
+                    className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+                  >
+                    {downloading === "stl" ? "Preparing…" : "Download STL"}
+                  </button>
+                )}
               </div>
             </div>
           </article>
@@ -228,10 +239,16 @@ function PartDetailPage() {
 
       {preview && data && (
         <PartPreviewModal
-          part={{ id: data.id, name: data.name, file_name: data.file_name }}
+          part={{
+            id: data.id,
+            name: data.name,
+            step_file_name: data.step_file_name,
+            stl_file_name: data.stl_file_name,
+          }}
           onClose={() => setPreview(false)}
         />
       )}
+
     </SiteShell>
   );
 }
