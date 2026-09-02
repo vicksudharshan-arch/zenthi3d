@@ -332,7 +332,10 @@ function AdminPage() {
             ))}
           </div>
         )}
+
+        <CopyrightReports />
       </div>
+
 
       {editing && (
         <EditDialog
