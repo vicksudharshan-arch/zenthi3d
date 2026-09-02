@@ -266,8 +266,14 @@ function LibraryPage() {
                 key={p.id}
                 id={`part-${p.id}`}
                 onDoubleClick={() =>
-                  setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                  setPreview({
+                    id: p.id,
+                    name: p.name,
+                    step_file_name: p.step_file_name,
+                    stl_file_name: p.stl_file_name,
+                  })
                 }
+
                 title="Double-click to preview the file"
                 className={
                   "flex flex-col rounded-sm border bg-card p-6 transition-colors " +
