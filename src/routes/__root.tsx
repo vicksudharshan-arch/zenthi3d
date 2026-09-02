@@ -79,13 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Scarpa — open library of 3D-printable car parts" },
+      { title: "Zenthi — open library of 3D-printable car parts" },
       {
         name: "description",
         content:
           "A free community library of 3D-printable brackets, housings, covers and trim for exotic and high-performance cars.",
       },
-      { property: "og:title", content: "Scarpa" },
+      { property: "og:title", content: "Zenthi" },
       {
         property: "og:description",
         content: "A shared library of 3D-printable parts for cars nobody else supports.",

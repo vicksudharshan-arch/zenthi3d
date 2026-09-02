@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 
 function Wordmark() {
   return (
-    <Link to="/" className="group flex items-baseline gap-2">
+      <Link to="/" className="group flex items-baseline gap-2">
       <span className="font-display text-2xl font-semibold tracking-tight text-foreground">
-        Scarpa
+        Zenthi
       </span>
       <span className="tech-label hidden sm:inline">Open parts library</span>
     </Link>
@@ -47,12 +47,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <div className="mx-auto w-full max-w-6xl px-5 py-10">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="font-display text-lg font-semibold">Scarpa</p>
+              <p className="font-display text-lg font-semibold">Zenthi</p>
               <p className="tech-label mt-1">Community parts archive</p>
             </div>
             <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
               Files are shared by the community and are for non-safety-critical parts only. Verify
-              fit and function before use. Scarpa does not guarantee fitment or safety.
+              fit and function before use. Zenthi does not guarantee fitment or safety.
             </p>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
