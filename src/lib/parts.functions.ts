@@ -101,8 +101,10 @@ export const getDownloadUrl = createServerFn({ method: "POST" })
       .from("parts")
       .select("file_path, file_name")
       .eq("id", data.id)
+      .eq("status", "approved")
       .maybeSingle();
     if (error || !part) throw new Error(error?.message ?? "Part not found");
+
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("part-files")
       .createSignedUrl(part.file_path, 300, { download: part.file_name });
