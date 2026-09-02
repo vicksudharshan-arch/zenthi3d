@@ -57,10 +57,12 @@ type Part = {
 };
 
 function LibraryPage() {
+  const { part: sharedId } = Route.useSearch();
   const [make, setMake] = useState("all");
   const [model, setModel] = useState("all");
   const [category, setCategory] = useState("all");
   const [downloading, setDownloading] = useState<string | null>(null);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["parts", "approved"],
