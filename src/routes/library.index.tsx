@@ -428,13 +428,25 @@ function LibraryPage() {
                     >
                       Delete
                     </button>
-                    <button
-                      onClick={() => download(p.id)}
-                      disabled={downloading === p.id}
-                      className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      {downloading === p.id ? "Preparing…" : "Download"}
-                    </button>
+                    {p.step_file_name && (
+                      <button
+                        onClick={() => download(p.id, "step")}
+                        disabled={downloading === `${p.id}:step`}
+                        className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        {downloading === `${p.id}:step` ? "Preparing…" : "Download STEP"}
+                      </button>
+                    )}
+                    {p.stl_file_name && (
+                      <button
+                        onClick={() => download(p.id, "stl")}
+                        disabled={downloading === `${p.id}:stl`}
+                        className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+                      >
+                        {downloading === `${p.id}:stl` ? "Preparing…" : "Download STL"}
+                      </button>
+                    )}
+
                   </div>
 
                 </div>
