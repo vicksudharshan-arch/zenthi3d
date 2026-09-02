@@ -223,8 +223,13 @@ function LibraryPage() {
             {filtered.map((p) => (
               <article
                 key={p.id}
-                className="flex flex-col rounded-sm border border-border bg-card p-6"
+                id={`part-${p.id}`}
+                className={
+                  "flex flex-col rounded-sm border bg-card p-6 transition-colors " +
+                  (sharedId === p.id ? "border-brass ring-2 ring-brass/30" : "border-border")
+                }
               >
+
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="font-display text-xl font-semibold tracking-tight">{p.name}</h2>
                   <span className="shrink-0 rounded-sm bg-accent px-2 py-1 font-mono text-[0.65rem] tracking-widest text-accent-foreground uppercase">
