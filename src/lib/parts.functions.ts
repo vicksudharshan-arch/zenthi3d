@@ -13,15 +13,9 @@ export type PartRow = {
   vehicles: { make: string; model: string; yearFrom: string; yearTo: string }[];
   notes: string | null;
   uploader_name: string | null;
-  file_path: string | null;
-  file_name: string | null;
-  file_size: number | null;
   step_file_path: string | null;
   step_file_name: string | null;
   step_file_size: number | null;
-  stl_file_path: string | null;
-  stl_file_name: string | null;
-  stl_file_size: number | null;
   status: string;
   created_at: string;
 };
@@ -90,10 +84,10 @@ export const deleteParts = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("parts")
-      .select("file_path, step_file_path, stl_file_path")
+      .select("step_file_path")
       .in("id", data.ids);
     const paths = (rows ?? [])
-      .flatMap((r) => [r.file_path, r.step_file_path, r.stl_file_path])
+      .map((r) => r.step_file_path)
       .filter((p): p is string => !!p);
     if (paths.length)
       await supabaseAdmin.storage.from("part-files").remove(Array.from(new Set(paths)));
@@ -103,36 +97,23 @@ export const deleteParts = createServerFn({ method: "POST" })
   });
 
 export const getDownloadUrl = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string(), format: z.enum(["step", "stl"]).optional() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error } = await supabaseAdmin
       .from("parts")
-      .select("file_path, file_name, step_file_path, step_file_name, stl_file_path, stl_file_name")
+      .select("step_file_path, step_file_name")
       .eq("id", data.id)
       .eq("status", "approved")
       .maybeSingle();
     if (error || !part) throw new Error(error?.message ?? "Part not found");
 
-    let path: string | null = null;
-    let fileName: string | null = null;
-    if (data.format === "step") {
-      path = part.step_file_path;
-      fileName = part.step_file_name;
-    } else if (data.format === "stl") {
-      path = part.stl_file_path;
-      fileName = part.stl_file_name;
-    } else {
-      path = part.step_file_path ?? part.stl_file_path ?? part.file_path;
-      fileName = part.step_file_name ?? part.stl_file_name ?? part.file_name;
-    }
-    if (!path) throw new Error("That format isn't available for this part.");
+    const path = part.step_file_path;
+    if (!path) throw new Error("No file is available for this part.");
 
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("part-files")
-      .createSignedUrl(path, 300, { download: fileName ?? path });
+      .createSignedUrl(path, 300, { download: part.step_file_name ?? path });
     if (signErr || !signed) throw new Error(signErr?.message ?? "Could not create download link");
     return { url: signed.signedUrl };
   });
@@ -199,18 +180,12 @@ export const deletePartAsUploader = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error: readErr } = await supabaseAdmin
       .from("parts")
-      .select("uploader_name, file_path, step_file_path, stl_file_path")
+      .select("uploader_name, step_file_path")
       .eq("id", data.id)
       .maybeSingle();
     if (readErr || !part) throw new Error("Part not found");
     if (!nameMatches(data.uploaderName, part.uploader_name)) return { ok: false as const };
-    const paths = Array.from(
-      new Set(
-        [part.file_path, part.step_file_path, part.stl_file_path].filter(
-          (p): p is string => !!p,
-        ),
-      ),
-    );
+    const paths = [part.step_file_path].filter((p): p is string => !!p);
     if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
 
     const { error } = await supabaseAdmin.from("parts").delete().eq("id", data.id);
