@@ -292,20 +292,25 @@ export function UploaderEditDialog({
                     placeholder="Model"
                     className={fieldCls + " mt-0"}
                   />
-                  <input
-                    aria-label="Year from"
-                    value={v.yearFrom}
-                    onChange={(e) => updateVehicle(i, { yearFrom: e.target.value })}
-                    placeholder="1989"
-                    className={fieldCls + " mt-0 font-mono"}
-                  />
-                  <input
-                    aria-label="Year to"
-                    value={v.yearTo}
-                    onChange={(e) => updateVehicle(i, { yearTo: e.target.value })}
-                    placeholder="1994"
-                    className={fieldCls + " mt-0 font-mono"}
-                  />
+                  <div className="sm:col-span-2">
+                    <span className={labelCls + " mb-1 text-xs"}>Year range</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        aria-label="Year from"
+                        value={v.yearFrom}
+                        onChange={(e) => updateVehicle(i, { yearFrom: e.target.value })}
+                        placeholder="Year from"
+                        className={fieldCls + " mt-0 font-mono"}
+                      />
+                      <input
+                        aria-label="Year to"
+                        value={v.yearTo}
+                        onChange={(e) => updateVehicle(i, { yearTo: e.target.value })}
+                        placeholder="Year to"
+                        className={fieldCls + " mt-0 font-mono"}
+                      />
+                    </div>
+                  </div>
                   {vehicles.length > 1 && (
                     <button
                       type="button"
