@@ -33,6 +33,9 @@ type Part = {
   name: string;
   description: string;
   category: string;
+  placement: string | null;
+  material: string | null;
+  thickness_infill: string | null;
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
@@ -51,7 +54,7 @@ function LibraryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,name,description,category,vehicles,notes,uploader_name,file_name,created_at")
+        .select("id,name,description,category,placement,material,thickness_infill,vehicles,notes,uploader_name,file_name,created_at")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
