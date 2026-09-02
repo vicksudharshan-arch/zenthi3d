@@ -48,13 +48,14 @@ type Part = {
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
-  file_name: string;
+  step_file_name: string | null;
+  stl_file_name: string | null;
   created_at: string;
 };
 
 function PartDetailPage() {
   const { partId } = Route.useParams();
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState<"step" | "stl" | null>(null);
   const [preview, setPreview] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -63,7 +64,7 @@ function PartDetailPage() {
       const { data, error } = await supabase
         .from("parts")
         .select(
-          "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,file_name,created_at",
+          "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,created_at",
         )
         .eq("id", partId)
         .eq("status", "approved")
@@ -73,18 +74,19 @@ function PartDetailPage() {
     },
   });
 
-  async function download() {
+  async function download(format: "step" | "stl") {
     if (!data) return;
-    setDownloading(true);
+    setDownloading(format);
     try {
-      const { url } = await getDownloadUrl({ data: { id: data.id } });
+      const { url } = await getDownloadUrl({ data: { id: data.id, format } });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
     } finally {
-      setDownloading(false);
+      setDownloading(null);
     }
   }
+
 
   async function copyLink() {
     const url = window.location.href;
