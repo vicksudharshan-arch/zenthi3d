@@ -24,9 +24,12 @@ export type Database = {
           file_size: number | null
           id: string
           license_accepted: boolean
+          material: string | null
           name: string
           notes: string | null
+          placement: string | null
           status: string
+          thickness_infill: string | null
           updated_at: string
           uploader_name: string | null
           vehicles: Json
@@ -40,9 +43,12 @@ export type Database = {
           file_size?: number | null
           id?: string
           license_accepted?: boolean
+          material?: string | null
           name: string
           notes?: string | null
+          placement?: string | null
           status?: string
+          thickness_infill?: string | null
           updated_at?: string
           uploader_name?: string | null
           vehicles?: Json
@@ -56,9 +62,12 @@ export type Database = {
           file_size?: number | null
           id?: string
           license_accepted?: boolean
+          material?: string | null
           name?: string
           notes?: string | null
+          placement?: string | null
           status?: string
+          thickness_infill?: string | null
           updated_at?: string
           uploader_name?: string | null
           vehicles?: Json
