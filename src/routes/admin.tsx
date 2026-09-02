@@ -20,6 +20,8 @@ import {
   type PartRow,
 } from "@/lib/parts.functions";
 import { getAdminGateState, lockAdmin, unlockAdmin } from "@/lib/admin-gate.functions";
+import { listCopyrightReports, setCopyrightReportStatus } from "@/lib/copyright.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
