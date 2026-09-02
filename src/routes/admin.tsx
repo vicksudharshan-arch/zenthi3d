@@ -83,7 +83,7 @@ function AdminGate() {
           </p>
           {data && !data.configured && (
             <p className="mt-4 rounded-sm border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              No admin passcode has been set yet. Add an ADMIN_PASSCODE secret in project settings.
+              No admin passcode is configured in the database yet.
             </p>
           )}
           <form
