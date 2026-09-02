@@ -252,9 +252,14 @@ function LibraryPage() {
                   </details>
                 )}
                 <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-4">
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {p.file_name}
-                    {p.uploader_name ? ` · ${p.uploader_name}` : ""}
+                  <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
+                    <span>
+                      {p.file_name}
+                      {p.uploader_name ? ` · ${p.uploader_name}` : ""}
+                    </span>
+                    <span className="rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground">
+                      {CONTRIBUTOR_TYPE_LABELS[p.contributor_type as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? p.contributor_type}
+                    </span>
                   </p>
                   <button
                     onClick={() => download(p.id)}
