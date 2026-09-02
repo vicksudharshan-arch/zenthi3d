@@ -9,7 +9,7 @@ export type PartRow = {
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
-  contributor_type: string;
+  contributor_type: string[];
   vehicles: { make: string; model: string; yearFrom: string; yearTo: string }[];
   notes: string | null;
   uploader_name: string | null;
