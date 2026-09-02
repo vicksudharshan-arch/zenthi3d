@@ -44,7 +44,7 @@ function UploadPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [uploader, setUploader] = useState("");
-  const [contributorType, setContributorType] = useState<ContributorType>("restorer");
+  const [contributorTypes, setContributorTypes] = useState<ContributorType[]>([]);
   const [category, setCategory] = useState<Category>("bracket");
   const [placement, setPlacement] = useState("");
   const [material, setMaterial] = useState("");
@@ -76,6 +76,10 @@ function UploadPage() {
       toast.error("Add at least one vehicle this part fits.");
       return;
     }
+    if (contributorTypes.length === 0) {
+      toast.error("Select at least one contributor tag — what best describes you.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -92,7 +96,7 @@ function UploadPage() {
         placement: placement.trim() || null,
         material: material.trim(),
         thickness_infill: thickness.trim(),
-        contributor_type: contributorType,
+        contributor_type: contributorTypes,
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
@@ -352,22 +356,43 @@ function UploadPage() {
               />
             </div>
             <div>
-              <label className={labelCls} htmlFor="contributorType">
-                You are a…
-              </label>
-              <select
-                id="contributorType"
-                required
-                value={contributorType}
-                onChange={(e) => setContributorType(e.target.value as ContributorType)}
-                className={fieldCls}
+              <span className={labelCls} id="contributorType-label">
+                You are a… (select all that apply)
+              </span>
+              <div
+                role="group"
+                aria-labelledby="contributorType-label"
+                className="mt-2 flex flex-wrap gap-2"
               >
-                {CONTRIBUTOR_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {CONTRIBUTOR_TYPE_LABELS[t]}
-                  </option>
-                ))}
-              </select>
+                {CONTRIBUTOR_TYPES.map((t) => {
+                  const active = contributorTypes.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() =>
+                        setContributorTypes((ts) =>
+                          active ? ts.filter((x) => x !== t) : [...ts, t],
+                        )
+                      }
+                      className={
+                        "rounded-sm border px-3 py-1.5 text-sm transition-colors " +
+                        (active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-foreground hover:border-ring hover:bg-secondary")
+                      }
+                    >
+                      {CONTRIBUTOR_TYPE_LABELS[t]}
+                    </button>
+                  );
+                })}
+              </div>
+              {contributorTypes.length === 0 && (
+                <p className="mt-2 font-mono text-xs text-muted-foreground">
+                  Pick at least one tag.
+                </p>
+              )}
             </div>
           </fieldset>
 

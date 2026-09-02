@@ -9,13 +9,26 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   other: "Other",
 };
 
-export const CONTRIBUTOR_TYPES = ["restorer", "enthusiast", "professional_shop", "other"] as const;
+export const CONTRIBUTOR_TYPES = [
+  "restorer",
+  "enthusiast",
+  "professional_shop",
+  "fabricator",
+  "cad_designer",
+  "printing_maker",
+  "parts_supplier",
+  "other",
+] as const;
 export type ContributorType = (typeof CONTRIBUTOR_TYPES)[number];
 
 export const CONTRIBUTOR_TYPE_LABELS: Record<ContributorType, string> = {
   restorer: "Restorer",
-  enthusiast: "Enthusiast",
-  professional_shop: "Professional automotive shop owner",
+  enthusiast: "Enthusiast / DIY builder",
+  professional_shop: "Professional shop owner / technician",
+  fabricator: "Fabricator / machinist",
+  cad_designer: "CAD / mechanical designer",
+  printing_maker: "3D printing hobbyist / maker",
+  parts_supplier: "Parts supplier / dealer",
   other: "Other",
 };
 
