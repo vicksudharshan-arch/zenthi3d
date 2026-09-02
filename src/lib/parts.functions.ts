@@ -13,12 +13,19 @@ export type PartRow = {
   vehicles: { make: string; model: string; yearFrom: string; yearTo: string }[];
   notes: string | null;
   uploader_name: string | null;
-  file_path: string;
-  file_name: string;
+  file_path: string | null;
+  file_name: string | null;
   file_size: number | null;
+  step_file_path: string | null;
+  step_file_name: string | null;
+  step_file_size: number | null;
+  stl_file_path: string | null;
+  stl_file_name: string | null;
+  stl_file_size: number | null;
   status: string;
   created_at: string;
 };
+
 
 export const listAllParts = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
