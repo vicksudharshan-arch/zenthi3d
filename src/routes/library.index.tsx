@@ -387,7 +387,6 @@ function LibraryPage() {
                           name: p.name,
                           step_file_name: p.step_file_name,
                           stl_file_name: p.stl_file_name,
-                    stl_file_name: p.stl_file_name,
                         })
                       }
 
