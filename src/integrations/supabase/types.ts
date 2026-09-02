@@ -35,6 +35,42 @@ export type Database = {
         }
         Relationships: []
       }
+      copyright_reports: {
+        Row: {
+          concern: string
+          created_at: string
+          good_faith: boolean
+          id: string
+          part_reference: string
+          reporter_email: string
+          reporter_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          concern: string
+          created_at?: string
+          good_faith?: boolean
+          id?: string
+          part_reference: string
+          reporter_email: string
+          reporter_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          concern?: string
+          created_at?: string
+          good_faith?: boolean
+          id?: string
+          part_reference?: string
+          reporter_email?: string
+          reporter_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       parts: {
         Row: {
           category: string
