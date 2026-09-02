@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_config: {
+        Row: {
+          created_at: string
+          id: string
+          passcode: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          passcode: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          passcode?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       parts: {
         Row: {
           category: string
