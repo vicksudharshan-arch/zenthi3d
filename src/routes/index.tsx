@@ -71,7 +71,7 @@ function Index() {
             </Link>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
-            PORSCHE · LAMBORGHINI · FERRARI · MASERATI · ALFA ROMEO · LOTUS · DE TOMASO
+            PORSCHE · LAMBORGHINI · FERRARI · MASERATI · ALFA ROMEO · LOTUS · DE TOMASO AND MORE
           </p>
         </div>
       </section>
