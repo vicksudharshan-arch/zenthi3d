@@ -302,6 +302,21 @@ function LibraryPage() {
                     )}
                   </p>
                   <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      to="/library/$partId"
+                      params={{ partId: p.id }}
+                      className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+                    >
+                      Details
+                    </Link>
+                    <button
+                      onClick={() =>
+                        setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                      }
+                      className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+                    >
+                      Preview
+                    </button>
                     <button
                       onClick={() => copyLink(p.id)}
                       className="inline-flex h-9 items-center rounded-sm border border-brass px-4 text-sm font-medium text-brass-foreground hover:bg-brass/15"
