@@ -138,7 +138,22 @@ function PartDetailPage() {
               </ul>
             </div>
 
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <span className="tech-label">Formats</span>
+              {data.step_file_name && (
+                <span className="rounded-sm border border-primary px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-primary uppercase">
+                  STEP · editable
+                </span>
+              )}
+              {data.stl_file_name && (
+                <span className="rounded-sm border border-brass px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-brass-foreground uppercase">
+                  STL · print-ready
+                </span>
+              )}
+            </div>
+
             <dl className="mt-6 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
+
               {data.placement && (
                 <div>
                   <dt className="tech-label">Recommended placement</dt>
