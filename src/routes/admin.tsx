@@ -353,7 +353,77 @@ function AdminPage() {
   );
 }
 
+function CopyrightReports() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["copyright-reports"],
+    queryFn: () => listCopyrightReports(),
+  });
+
+  const resolve = useMutation({
+    mutationFn: (vars: { id: string; status: "open" | "resolved" }) =>
+      setCopyrightReportStatus({ data: vars }),
+    onSuccess: () => {
+      toast.success("Report updated.");
+      qc.invalidateQueries({ queryKey: ["copyright-reports"] });
+    },
+    onError: () => toast.error("Update failed."),
+  });
+
+  const reports = data ?? [];
+
+  return (
+    <section className="mt-20 border-t border-border pt-10">
+      <p className="tech-label">Legal</p>
+      <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+        Copyright reports ({reports.length})
+      </h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Reports submitted through the public copyright policy page. Use the review queue above to
+        delete a submission if a report is warranted.
+      </p>
+
+      {isLoading ? (
+        <p className="mt-8 font-mono text-sm text-muted-foreground">Loading…</p>
+      ) : reports.length === 0 ? (
+        <p className="mt-8 font-mono text-sm text-muted-foreground">No reports submitted.</p>
+      ) : (
+        <div className="mt-6 space-y-4">
+          {reports.map((r) => (
+            <article key={r.id} className="rounded-sm border border-border bg-card p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-display text-lg font-semibold">{r.part_reference}</h3>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
+                    {r.reporter_name} · {r.reporter_email} ·{" "}
+                    {new Date(r.created_at).toLocaleDateString()} · {r.status}
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    resolve.mutate({
+                      id: r.id,
+                      status: r.status === "resolved" ? "open" : "resolved",
+                    })
+                  }
+                  className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+                >
+                  {r.status === "resolved" ? "Reopen" : "Mark resolved"}
+                </button>
+              </div>
+              <p className="mt-4 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                {r.concern}
+              </p>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function EditDialog({
+
   part,
   onClose,
   onSaved,
