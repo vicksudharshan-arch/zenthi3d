@@ -16,6 +16,9 @@ import {
 import { getDownloadUrl } from "@/lib/parts.functions";
 
 export const Route = createFileRoute("/library")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    part: typeof search['part'] === "string" ? (search['part'] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Part library — Zenthi" },
@@ -35,6 +38,7 @@ export const Route = createFileRoute("/library")({
   }),
   component: LibraryPage,
 });
+
 
 type Part = {
   id: string;
