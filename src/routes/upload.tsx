@@ -3,7 +3,15 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES, CATEGORY_LABELS, type Category, type Vehicle } from "@/lib/parts";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CONTRIBUTOR_TYPES,
+  CONTRIBUTOR_TYPE_LABELS,
+  type Category,
+  type ContributorType,
+  type Vehicle,
+} from "@/lib/parts";
 
 export const Route = createFileRoute("/upload")({
   head: () => ({
