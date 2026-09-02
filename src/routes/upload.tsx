@@ -44,6 +44,7 @@ function UploadPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [uploader, setUploader] = useState("");
+  const [contributorType, setContributorType] = useState<ContributorType>("restorer");
   const [category, setCategory] = useState<Category>("bracket");
   const [placement, setPlacement] = useState("");
   const [material, setMaterial] = useState("");
