@@ -297,13 +297,22 @@ function LibraryPage() {
                       ),
                     )}
                   </p>
-                  <button
-                    onClick={() => download(p.id)}
-                    disabled={downloading === p.id}
-                    className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {downloading === p.id ? "Preparing…" : "Download"}
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      onClick={() => copyLink(p.id)}
+                      className="inline-flex h-9 items-center rounded-sm border border-brass px-4 text-sm font-medium text-brass-foreground hover:bg-brass/15"
+                    >
+                      Share link
+                    </button>
+                    <button
+                      onClick={() => download(p.id)}
+                      disabled={downloading === p.id}
+                      className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {downloading === p.id ? "Preparing…" : "Download"}
+                    </button>
+                  </div>
+
                 </div>
               </article>
             ))}
