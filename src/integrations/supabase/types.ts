@@ -20,9 +20,6 @@ export type Database = {
           contributor_type: string[]
           created_at: string
           description: string
-          file_name: string | null
-          file_path: string | null
-          file_size: number | null
           id: string
           license_accepted: boolean
           material: string | null
@@ -33,9 +30,6 @@ export type Database = {
           step_file_name: string | null
           step_file_path: string | null
           step_file_size: number | null
-          stl_file_name: string | null
-          stl_file_path: string | null
-          stl_file_size: number | null
           thickness_infill: string | null
           updated_at: string
           uploader_name: string | null
@@ -46,9 +40,6 @@ export type Database = {
           contributor_type?: string[]
           created_at?: string
           description?: string
-          file_name?: string | null
-          file_path?: string | null
-          file_size?: number | null
           id?: string
           license_accepted?: boolean
           material?: string | null
@@ -59,9 +50,6 @@ export type Database = {
           step_file_name?: string | null
           step_file_path?: string | null
           step_file_size?: number | null
-          stl_file_name?: string | null
-          stl_file_path?: string | null
-          stl_file_size?: number | null
           thickness_infill?: string | null
           updated_at?: string
           uploader_name?: string | null
@@ -72,9 +60,6 @@ export type Database = {
           contributor_type?: string[]
           created_at?: string
           description?: string
-          file_name?: string | null
-          file_path?: string | null
-          file_size?: number | null
           id?: string
           license_accepted?: boolean
           material?: string | null
@@ -85,9 +70,6 @@ export type Database = {
           step_file_name?: string | null
           step_file_path?: string | null
           step_file_size?: number | null
-          stl_file_name?: string | null
-          stl_file_path?: string | null
-          stl_file_size?: number | null
           thickness_infill?: string | null
           updated_at?: string
           uploader_name?: string | null
