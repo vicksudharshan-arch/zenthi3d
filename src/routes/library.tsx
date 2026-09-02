@@ -43,7 +43,7 @@ type Part = {
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
-  contributor_type: string;
+  contributor_type: string[];
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
@@ -257,9 +257,16 @@ function LibraryPage() {
                       {p.file_name}
                       {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                     </span>
-                    <span className="rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground">
-                      {CONTRIBUTOR_TYPE_LABELS[p.contributor_type as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? p.contributor_type}
-                    </span>
+                    {(Array.isArray(p.contributor_type) ? p.contributor_type : [p.contributor_type]).map(
+                      (t) => (
+                        <span
+                          key={t}
+                          className="rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground"
+                        >
+                          {CONTRIBUTOR_TYPE_LABELS[t as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? t}
+                        </span>
+                      ),
+                    )}
                   </p>
                   <button
                     onClick={() => download(p.id)}
