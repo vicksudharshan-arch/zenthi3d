@@ -117,6 +117,23 @@ function LibraryPage() {
     }
   }
 
+  async function copyLink(id: string) {
+    const url = `${window.location.origin}/library?part=${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      window.prompt("Copy this link", url);
+    }
+  }
+
+  useEffect(() => {
+    if (!sharedId || isLoading) return;
+    const el = document.getElementById(`part-${sharedId}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [sharedId, isLoading]);
+
+
   const selectCls =
     "rounded-sm border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/25";
 
