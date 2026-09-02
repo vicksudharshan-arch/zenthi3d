@@ -46,7 +46,7 @@ export function PartPreviewModal({
           import("three/examples/jsm/loaders/STLLoader.js"),
           import("three/examples/jsm/controls/OrbitControls.js"),
         ]);
-        const { url } = await getDownloadUrl({ data: { id: part.id } });
+        const { url } = await getDownloadUrl({ data: { id: part.id, format: "stl" } });
         const res = await fetch(url);
         if (!res.ok) throw new Error("Could not fetch file");
         const buffer = await res.arrayBuffer();
