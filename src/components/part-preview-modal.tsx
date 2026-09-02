@@ -4,7 +4,8 @@ import { getDownloadUrl } from "@/lib/parts.functions";
 type PreviewPart = {
   id: string;
   name: string;
-  file_name: string;
+  step_file_name?: string | null;
+  stl_file_name?: string | null;
 };
 
 export function PartPreviewModal({
@@ -18,8 +19,9 @@ export function PartPreviewModal({
   const [status, setStatus] = useState<"loading" | "ready" | "unsupported" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  const ext = part.file_name.split(".").pop()?.toLowerCase() ?? "";
-  const isStl = ext === "stl";
+  const isStl = !!part.stl_file_name;
+  const displayName = part.stl_file_name ?? part.step_file_name ?? "";
+
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
