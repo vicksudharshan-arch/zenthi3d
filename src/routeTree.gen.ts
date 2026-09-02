@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as LibraryIndexRouteImport } from './routes/library.index'
+import { Route as LibraryPartIdRouteImport } from './routes/library.$partId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,17 +35,24 @@ const LibraryIndexRoute = LibraryIndexRouteImport.update({
   path: '/library/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LibraryPartIdRoute = LibraryPartIdRouteImport.update({
+  id: '/library/$partId',
+  path: '/library/$partId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/upload': typeof UploadRoute
+  '/library/$partId': typeof LibraryPartIdRoute
   '/library/': typeof LibraryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/upload': typeof UploadRoute
+  '/library/$partId': typeof LibraryPartIdRoute
   '/library': typeof LibraryIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/upload': typeof UploadRoute
+  '/library/$partId': typeof LibraryPartIdRoute
   '/library/': typeof LibraryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/upload' | '/library/'
+  fullPaths: '/' | '/admin' | '/upload' | '/library/$partId' | '/library/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/upload' | '/library'
-  id: '__root__' | '/' | '/admin' | '/upload' | '/library/'
+  to: '/' | '/admin' | '/upload' | '/library/$partId' | '/library'
+  id: '__root__' | '/' | '/admin' | '/upload' | '/library/$partId' | '/library/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   UploadRoute: typeof UploadRoute
+  LibraryPartIdRoute: typeof LibraryPartIdRoute
   LibraryIndexRoute: typeof LibraryIndexRoute
 }
 
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library/$partId': {
+      id: '/library/$partId'
+      path: '/library/$partId'
+      fullPath: '/library/$partId'
+      preLoaderRoute: typeof LibraryPartIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   UploadRoute: UploadRoute,
+  LibraryPartIdRoute: LibraryPartIdRoute,
   LibraryIndexRoute: LibraryIndexRoute,
 }
 export const routeTree = rootRouteImport
