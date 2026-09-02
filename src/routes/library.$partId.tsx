@@ -49,13 +49,12 @@ type Part = {
   notes: string | null;
   uploader_name: string | null;
   step_file_name: string | null;
-  stl_file_name: string | null;
   created_at: string;
 };
 
 function PartDetailPage() {
   const { partId } = Route.useParams();
-  const [downloading, setDownloading] = useState<"step" | "stl" | null>(null);
+  const [downloading, setDownloading] = useState<"step" | null>(null);
   const [preview, setPreview] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -64,7 +63,7 @@ function PartDetailPage() {
       const { data, error } = await supabase
         .from("parts")
         .select(
-          "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,created_at",
+          "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,created_at",
         )
         .eq("id", partId)
         .eq("status", "approved")
@@ -74,11 +73,11 @@ function PartDetailPage() {
     },
   });
 
-  async function download(format: "step" | "stl") {
+  async function download() {
     if (!data) return;
-    setDownloading(format);
+    setDownloading("step");
     try {
-      const { url } = await getDownloadUrl({ data: { id: data.id, format } });
+      const { url } = await getDownloadUrl({ data: { id: data.id } });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
@@ -145,11 +144,6 @@ function PartDetailPage() {
                   STEP · editable
                 </span>
               )}
-              {data.stl_file_name && (
-                <span className="rounded-sm border border-brass px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-brass-foreground uppercase">
-                  STL · print-ready
-                </span>
-              )}
             </div>
 
             <dl className="mt-6 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
@@ -184,7 +178,7 @@ function PartDetailPage() {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
               <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                 <span>
-                  {[data.step_file_name, data.stl_file_name].filter(Boolean).join(" · ")}
+                  {data.step_file_name}
                   {data.uploader_name ? ` · ${data.uploader_name}` : ""}
                 </span>
 
@@ -215,20 +209,11 @@ function PartDetailPage() {
                 </button>
                 {data.step_file_name && (
                   <button
-                    onClick={() => download("step")}
+                    onClick={() => download()}
                     disabled={downloading === "step"}
                     className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                   >
                     {downloading === "step" ? "Preparing…" : "Download STEP"}
-                  </button>
-                )}
-                {data.stl_file_name && (
-                  <button
-                    onClick={() => download("stl")}
-                    disabled={downloading === "stl"}
-                    className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
-                  >
-                    {downloading === "stl" ? "Preparing…" : "Download STL"}
                   </button>
                 )}
               </div>
@@ -243,7 +228,6 @@ function PartDetailPage() {
             id: data.id,
             name: data.name,
             step_file_name: data.step_file_name,
-            stl_file_name: data.stl_file_name,
           }}
           onClose={() => setPreview(false)}
         />

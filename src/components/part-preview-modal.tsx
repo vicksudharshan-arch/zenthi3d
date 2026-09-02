@@ -5,7 +5,6 @@ type PreviewPart = {
   id: string;
   name: string;
   step_file_name?: string | null;
-  stl_file_name?: string | null;
 };
 
 export function PartPreviewModal({
@@ -19,8 +18,10 @@ export function PartPreviewModal({
   const [status, setStatus] = useState<"loading" | "ready" | "unsupported" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  const isStl = !!part.stl_file_name;
-  const displayName = part.stl_file_name ?? part.step_file_name ?? "";
+  // STEP is the only accepted upload format; the STL viewer path below is kept
+  // unused in case STL support is reintroduced later.
+  const isStl = false;
+  const displayName = part.step_file_name ?? "";
 
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export function PartPreviewModal({
           import("three/examples/jsm/loaders/STLLoader.js"),
           import("three/examples/jsm/controls/OrbitControls.js"),
         ]);
-        const { url } = await getDownloadUrl({ data: { id: part.id, format: "stl" } });
+        const { url } = await getDownloadUrl({ data: { id: part.id } });
         const res = await fetch(url);
         if (!res.ok) throw new Error("Could not fetch file");
         const buffer = await res.arrayBuffer();
@@ -170,10 +171,9 @@ export function PartPreviewModal({
                     This part ships as an editable STEP file
                   </p>
                   <p className="max-w-md text-sm text-muted-foreground">
-                    {displayName} — STEP is the preferred format here: it goes straight to a machine
-                    shop and can be modified in any CAD package, or exported to STL for printing. It
-                    just can't be rendered in the browser, so download it and open it in CAD or your
-                    slicer.
+                    {displayName} — STEP is the format we accept: it goes straight to a machine
+                    shop and can be modified in any CAD package, or exported for printing. Download
+                    it and open it in CAD or your slicer for full inspection.
                   </p>
                 </>
               )}
@@ -187,7 +187,7 @@ export function PartPreviewModal({
         </div>
         <p className="border-t border-border px-6 py-3 font-mono text-xs text-muted-foreground">
           {displayName}
-          {isStl ? " · drag to rotate, scroll to zoom" : ""}
+          
         </p>
 
       </div>

@@ -19,6 +19,7 @@ import {
   updatePart,
   type PartRow,
 } from "@/lib/parts.functions";
+import { getAdminGateState, lockAdmin, unlockAdmin } from "@/lib/admin-gate.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -35,8 +36,91 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: AdminPage,
+  component: AdminGate,
 });
+
+function AdminGate() {
+  const qc = useQueryClient();
+  const [passcode, setPasscode] = useState("");
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "gate"],
+    queryFn: () => getAdminGateState(),
+  });
+
+  const unlock = useMutation({
+    mutationFn: () => unlockAdmin({ data: { passcode } }),
+    onSuccess: (res) => {
+      if (res.ok) {
+        setPasscode("");
+        qc.invalidateQueries({ queryKey: ["admin", "gate"] });
+      } else if (!res.configured) {
+        toast.error("No admin passcode is configured yet.");
+      } else {
+        toast.error("Incorrect passcode.");
+      }
+    },
+    onError: () => toast.error("Could not verify the passcode."),
+  });
+
+  if (isLoading) {
+    return (
+      <SiteShell>
+        <div className="mx-auto max-w-md px-6 py-24 font-mono text-sm text-muted-foreground">
+          Checking access…
+        </div>
+      </SiteShell>
+    );
+  }
+
+  if (!data?.unlocked) {
+    return (
+      <SiteShell>
+        <div className="mx-auto max-w-md px-6 py-24">
+          <p className="tech-label text-brass">Restricted</p>
+          <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Review queue</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Enter the shared admin passcode to view and manage submissions.
+          </p>
+          {data && !data.configured && (
+            <p className="mt-4 rounded-sm border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              No admin passcode has been set yet. Add an ADMIN_PASSCODE secret in project settings.
+            </p>
+          )}
+          <form
+            className="mt-6 space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (passcode) unlock.mutate();
+            }}
+          >
+            <div>
+              <label className={labelCls} htmlFor="passcode">
+                Admin passcode
+              </label>
+              <input
+                id="passcode"
+                type="password"
+                autoComplete="current-password"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className={fieldCls}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!passcode || unlock.isPending}
+              className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+            >
+              {unlock.isPending ? "Checking…" : "Unlock"}
+            </button>
+          </form>
+        </div>
+      </SiteShell>
+    );
+  }
+
+  return <AdminPage />;
+}
 
 const TABS = ["pending", "approved", "rejected"] as const;
 
@@ -100,8 +184,24 @@ function AdminPage() {
   return (
     <SiteShell>
       <div className="mx-auto w-full max-w-5xl px-5 py-16">
-        <p className="tech-label">Internal</p>
-        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">Review queue</h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="tech-label">Internal</p>
+            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">
+              Review queue
+            </h1>
+          </div>
+          <button
+            onClick={async () => {
+              await lockAdmin();
+              qc.invalidateQueries({ queryKey: ["admin", "gate"] });
+            }}
+            className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+          >
+            Lock
+          </button>
+        </div>
+
 
         <div className="mt-8 flex gap-1 border-b border-border">
           {TABS.map((t) => (
@@ -166,12 +266,7 @@ function AdminPage() {
                       <h2 className="font-display text-xl font-semibold">{p.name}</h2>
                       <p className="mt-1 font-mono text-xs text-muted-foreground">
                         {CATEGORY_LABELS[p.category as Category] ?? p.category} ·{" "}
-                        {[p.step_file_name, p.stl_file_name, p.file_name]
-                          .filter(Boolean)
-                          .join(" · ") || "no file"}{" "}
-                        ·{" "}
-
-                        {new Date(p.created_at).toLocaleDateString()}
+                        {p.step_file_name} · {new Date(p.created_at).toLocaleDateString()}
                         {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                       </p>
                     </div>
