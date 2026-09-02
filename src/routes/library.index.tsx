@@ -341,6 +341,8 @@ function LibraryPage() {
           </div>
         )}
       </div>
+
+      {preview && <PartPreviewModal part={preview} onClose={() => setPreview(null)} />}
     </SiteShell>
   );
 }
