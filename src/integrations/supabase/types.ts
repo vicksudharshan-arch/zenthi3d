@@ -17,6 +17,7 @@ export type Database = {
       parts: {
         Row: {
           category: string
+          contributor_type: string
           created_at: string
           description: string
           file_name: string
@@ -36,6 +37,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          contributor_type?: string
           created_at?: string
           description?: string
           file_name: string
@@ -55,6 +57,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          contributor_type?: string
           created_at?: string
           description?: string
           file_name?: string
