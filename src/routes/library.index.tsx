@@ -118,7 +118,7 @@ function LibraryPage() {
   }
 
   async function copyLink(id: string) {
-    const url = `${window.location.origin}/library?part=${id}`;
+    const url = `${window.location.origin}/library/${id}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied");
