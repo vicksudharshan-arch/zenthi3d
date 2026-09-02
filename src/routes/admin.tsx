@@ -3,8 +3,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
-import { CATEGORY_LABELS, vehicleLabel, type Category } from "@/lib/parts";
-import { listAllParts, setPartStatus } from "@/lib/parts.functions";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CONTRIBUTOR_TYPES,
+  CONTRIBUTOR_TYPE_LABELS,
+  vehicleLabel,
+  type Category,
+  type Vehicle,
+} from "@/lib/parts";
+import {
+  deleteParts,
+  listAllParts,
+  setPartStatus,
+  updatePart,
+  type PartRow,
+} from "@/lib/parts.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -26,8 +40,14 @@ export const Route = createFileRoute("/admin")({
 
 const TABS = ["pending", "approved", "rejected"] as const;
 
+const labelCls = "tech-label block";
+const fieldCls =
+  "mt-2 w-full rounded-sm border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/25";
+
 function AdminPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]>("pending");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [editing, setEditing] = useState<PartRow | null>(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -45,7 +65,37 @@ function AdminPage() {
     onError: () => toast.error("Update failed."),
   });
 
+  const removal = useMutation({
+    mutationFn: (ids: string[]) => deleteParts({ data: { ids } }),
+    onSuccess: (_d, ids) => {
+      toast.success(`Deleted ${ids.length} submission${ids.length === 1 ? "" : "s"}.`);
+      setSelected((s) => s.filter((id) => !ids.includes(id)));
+      qc.invalidateQueries({ queryKey: ["parts"] });
+    },
+    onError: () => toast.error("Delete failed."),
+  });
+
   const parts = (data ?? []).filter((p) => p.status === tab);
+  const selectedHere = parts.filter((p) => selected.includes(p.id));
+  const allSelected = parts.length > 0 && selectedHere.length === parts.length;
+
+  const toggle = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  const toggleAll = () =>
+    setSelected((s) =>
+      allSelected
+        ? s.filter((id) => !parts.some((p) => p.id === id))
+        : Array.from(new Set([...s, ...parts.map((p) => p.id)])),
+    );
+
+  function confirmDelete(ids: string[]) {
+    const msg =
+      ids.length === 1
+        ? "Delete this submission and its file? This cannot be undone."
+        : `Delete ${ids.length} submissions and their files? This cannot be undone.`;
+    if (window.confirm(msg)) removal.mutate(ids);
+  }
 
   return (
     <SiteShell>
@@ -69,6 +119,30 @@ function AdminPage() {
           ))}
         </div>
 
+        {parts.length > 0 && (
+          <div className="mt-6 flex flex-wrap items-center gap-4 rounded-sm border border-border bg-card px-4 py-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleAll}
+                className="size-4 accent-[var(--primary)]"
+              />
+              Select all
+            </label>
+            <span className="font-mono text-xs text-muted-foreground">
+              {selectedHere.length} selected
+            </span>
+            <button
+              disabled={selectedHere.length === 0 || removal.isPending}
+              onClick={() => confirmDelete(selectedHere.map((p) => p.id))}
+              className="ml-auto h-9 rounded-sm border border-destructive/40 px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Delete selected
+            </button>
+          </div>
+        )}
+
         {isLoading ? (
           <p className="mt-12 font-mono text-sm text-muted-foreground">Loading…</p>
         ) : parts.length === 0 ? (
@@ -80,15 +154,24 @@ function AdminPage() {
             {parts.map((p) => (
               <article key={p.id} className="rounded-sm border border-border bg-card p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="font-display text-xl font-semibold">{p.name}</h2>
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">
-                      {CATEGORY_LABELS[p.category as Category] ?? p.category} · {p.file_name} ·{" "}
-                      {new Date(p.created_at).toLocaleDateString()}
-                      {p.uploader_name ? ` · ${p.uploader_name}` : ""}
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${p.name}`}
+                      checked={selected.includes(p.id)}
+                      onChange={() => toggle(p.id)}
+                      className="mt-1.5 size-4 accent-[var(--primary)]"
+                    />
+                    <div>
+                      <h2 className="font-display text-xl font-semibold">{p.name}</h2>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">
+                        {CATEGORY_LABELS[p.category as Category] ?? p.category} · {p.file_name} ·{" "}
+                        {new Date(p.created_at).toLocaleDateString()}
+                        {p.uploader_name ? ` · ${p.uploader_name}` : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {p.status !== "approved" && (
                       <button
                         onClick={() => mutation.mutate({ id: p.id, status: "approved" })}
@@ -113,6 +196,18 @@ function AdminPage() {
                         Reset
                       </button>
                     )}
+                    <button
+                      onClick={() => setEditing(p)}
+                      className="h-9 rounded-sm border border-brass px-4 text-sm font-medium text-brass-foreground hover:bg-brass/15"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => confirmDelete([p.id])}
+                      className="h-9 rounded-sm border border-destructive/40 px-4 text-sm font-medium text-destructive hover:bg-destructive/10"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -138,6 +233,312 @@ function AdminPage() {
           </div>
         )}
       </div>
+
+      {editing && (
+        <EditDialog
+          part={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            qc.invalidateQueries({ queryKey: ["parts"] });
+          }}
+        />
+      )}
     </SiteShell>
+  );
+}
+
+function EditDialog({
+  part,
+  onClose,
+  onSaved,
+}: {
+  part: PartRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(part.name);
+  const [description, setDescription] = useState(part.description ?? "");
+  const [category, setCategory] = useState(part.category);
+  const [placement, setPlacement] = useState(part.placement ?? "");
+  const [material, setMaterial] = useState(part.material ?? "");
+  const [thickness, setThickness] = useState(part.thickness_infill ?? "");
+  const [uploader, setUploader] = useState(part.uploader_name ?? "");
+  const [notes, setNotes] = useState(part.notes ?? "");
+  const [types, setTypes] = useState<string[]>(
+    Array.isArray(part.contributor_type) ? part.contributor_type : [],
+  );
+  const [vehicles, setVehicles] = useState<Vehicle[]>(
+    part.vehicles.length ? part.vehicles : [{ make: "", model: "", yearFrom: "", yearTo: "" }],
+  );
+
+  const save = useMutation({
+    mutationFn: () =>
+      updatePart({
+        data: {
+          id: part.id,
+          name: name.trim(),
+          description: description.trim(),
+          category,
+          placement: placement.trim() || null,
+          material: material.trim() || null,
+          thickness_infill: thickness.trim() || null,
+          contributor_type: types,
+          vehicles: vehicles.filter((v) => v.make.trim() || v.model.trim()),
+          notes: notes.trim() || null,
+          uploader_name: uploader.trim() || null,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Submission updated.");
+      onSaved();
+    },
+    onError: () => toast.error("Could not save changes."),
+  });
+
+  const updateVehicle = (i: number, patch: Partial<Vehicle>) =>
+    setVehicles((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-foreground/50 p-4 py-10"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Edit ${part.name}`}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-sm border border-border bg-background p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="tech-label">Edit submission</p>
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">{part.name}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-sm px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            Close
+          </button>
+        </div>
+
+        <form
+          className="mt-6 space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save.mutate();
+          }}
+        >
+          <div>
+            <label className={labelCls} htmlFor="edit-name">
+              Part name
+            </label>
+            <input
+              id="edit-name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={fieldCls}
+            />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="edit-description">
+              Description
+            </label>
+            <textarea
+              id="edit-description"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={fieldCls}
+            />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label className={labelCls} htmlFor="edit-category">
+                Category
+              </label>
+              <select
+                id="edit-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={fieldCls}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {CATEGORY_LABELS[c]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="edit-placement">
+                Recommended placement
+              </label>
+              <input
+                id="edit-placement"
+                value={placement}
+                onChange={(e) => setPlacement(e.target.value)}
+                className={fieldCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="edit-material">
+                Recommended material
+              </label>
+              <input
+                id="edit-material"
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+                className={fieldCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="edit-thickness">
+                Recommended thickness / infill
+              </label>
+              <input
+                id="edit-thickness"
+                value={thickness}
+                onChange={(e) => setThickness(e.target.value)}
+                className={fieldCls}
+              />
+            </div>
+          </div>
+
+          <div>
+            <span className={labelCls}>Fitment</span>
+            <div className="mt-2 space-y-3">
+              {vehicles.map((v, i) => (
+                <div
+                  key={i}
+                  className="grid gap-3 rounded-sm border border-border bg-card p-3 sm:grid-cols-[1fr_1fr_5rem_5rem_auto]"
+                >
+                  <input
+                    aria-label="Make"
+                    value={v.make}
+                    onChange={(e) => updateVehicle(i, { make: e.target.value })}
+                    placeholder="Make"
+                    className={fieldCls + " mt-0"}
+                  />
+                  <input
+                    aria-label="Model"
+                    value={v.model}
+                    onChange={(e) => updateVehicle(i, { model: e.target.value })}
+                    placeholder="Model"
+                    className={fieldCls + " mt-0"}
+                  />
+                  <input
+                    aria-label="Year from"
+                    value={v.yearFrom}
+                    onChange={(e) => updateVehicle(i, { yearFrom: e.target.value })}
+                    placeholder="1989"
+                    className={fieldCls + " mt-0 font-mono"}
+                  />
+                  <input
+                    aria-label="Year to"
+                    value={v.yearTo}
+                    onChange={(e) => updateVehicle(i, { yearTo: e.target.value })}
+                    placeholder="1994"
+                    className={fieldCls + " mt-0 font-mono"}
+                  />
+                  {vehicles.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setVehicles((vs) => vs.filter((_, idx) => idx !== i))}
+                      className="rounded-sm px-3 text-sm text-muted-foreground hover:text-destructive"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  setVehicles((vs) => [...vs, { make: "", model: "", yearFrom: "", yearTo: "" }])
+                }
+                className="rounded-sm border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:border-brass hover:text-brass-foreground"
+              >
+                + Add another vehicle
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span className={labelCls}>Contributor tags</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {CONTRIBUTOR_TYPES.map((t) => {
+                const active = types.includes(t);
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      setTypes((ts) => (active ? ts.filter((x) => x !== t) : [...ts, t]))
+                    }
+                    className={
+                      "rounded-sm border px-3 py-1.5 text-sm transition-colors " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-foreground hover:border-ring hover:bg-secondary")
+                    }
+                  >
+                    {CONTRIBUTOR_TYPE_LABELS[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label className={labelCls} htmlFor="edit-uploader">
+                Uploader name or handle
+              </label>
+              <input
+                id="edit-uploader"
+                value={uploader}
+                onChange={(e) => setUploader(e.target.value)}
+                className={fieldCls}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls} htmlFor="edit-notes">
+              Uploader's writeup
+            </label>
+            <textarea
+              id="edit-notes"
+              rows={5}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className={fieldCls}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 border-t border-border pt-5">
+            <button
+              type="submit"
+              disabled={save.isPending}
+              className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {save.isPending ? "Saving…" : "Save changes"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-11 items-center rounded-sm border border-border px-6 text-sm font-medium hover:bg-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
