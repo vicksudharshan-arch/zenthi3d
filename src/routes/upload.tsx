@@ -202,10 +202,11 @@ function UploadPage() {
             </div>
             <div>
               <label className={labelCls} htmlFor="placement">
-                Placement (optional)
+                Recommended placement
               </label>
               <input
                 id="placement"
+                required
                 value={placement}
                 onChange={(e) => setPlacement(e.target.value)}
                 placeholder="Where on the vehicle this installs — e.g. driver-side dash vent"
