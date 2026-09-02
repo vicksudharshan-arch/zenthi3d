@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 import { toast } from "sonner";
@@ -15,6 +15,11 @@ import {
   type Vehicle,
 } from "@/lib/parts";
 import { getDownloadUrl } from "@/lib/parts.functions";
+import {
+  UploaderDeleteDialog,
+  UploaderEditDialog,
+  type EditablePart,
+} from "@/components/uploader-part-dialogs";
 
 export const Route = createFileRoute("/library/")({
   validateSearch: (search: Record<string, unknown>): { part?: string } =>
@@ -66,6 +71,10 @@ function LibraryPage() {
   const [preview, setPreview] = useState<{ id: string; name: string; file_name: string } | null>(
     null,
   );
+  const [selected, setSelected] = useState<string[]>([]);
+  const [editing, setEditing] = useState<EditablePart | null>(null);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
+  const qc = useQueryClient();
 
 
   const { data, isLoading } = useQuery({
@@ -82,6 +91,9 @@ function LibraryPage() {
   });
 
   const parts = data ?? [];
+
+  const toggleSelected = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const makes = useMemo(
     () =>
@@ -203,8 +215,24 @@ function LibraryPage() {
               </option>
             ))}
           </select>
-          <span className="ml-auto font-mono text-xs text-muted-foreground">
-            {filtered.length} file{filtered.length === 1 ? "" : "s"}
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={filtered.length > 0 && filtered.every((p) => selected.includes(p.id))}
+              onChange={() =>
+                setSelected((s) =>
+                  filtered.length > 0 && filtered.every((p) => s.includes(p.id))
+                    ? s.filter((id) => !filtered.some((p) => p.id === id))
+                    : Array.from(new Set([...s, ...filtered.map((p) => p.id)])),
+                )
+              }
+              className="size-4 accent-[var(--primary)]"
+            />
+            Select all
+          </label>
+          <span className="font-mono text-xs text-muted-foreground">
+            {selected.length} selected · {filtered.length} file
+            {filtered.length === 1 ? "" : "s"}
           </span>
         </div>
 
@@ -239,7 +267,16 @@ function LibraryPage() {
               >
 
                 <div className="flex items-start justify-between gap-4">
-                  <h2 className="font-display text-xl font-semibold tracking-tight">{p.name}</h2>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${p.name}`}
+                      checked={selected.includes(p.id)}
+                      onChange={() => toggleSelected(p.id)}
+                      className="mt-1.5 size-4 accent-[var(--primary)]"
+                    />
+                    <h2 className="font-display text-xl font-semibold tracking-tight">{p.name}</h2>
+                  </div>
                   <span className="shrink-0 rounded-sm bg-accent px-2 py-1 font-mono text-[0.65rem] tracking-widest text-accent-foreground uppercase">
                     {CATEGORY_LABELS[p.category as Category] ?? p.category}
                   </span>
@@ -328,6 +365,34 @@ function LibraryPage() {
                       Share link
                     </button>
                     <button
+                      onClick={() =>
+                        setEditing({
+                          id: p.id,
+                          name: p.name,
+                          description: p.description,
+                          category: p.category,
+                          placement: p.placement,
+                          material: p.material,
+                          thickness_infill: p.thickness_infill,
+                          contributor_type: Array.isArray(p.contributor_type)
+                            ? p.contributor_type
+                            : [],
+                          vehicles: p.vehicles,
+                          notes: p.notes,
+                          uploader_name: p.uploader_name,
+                        })
+                      }
+                      className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setDeleting({ id: p.id, name: p.name })}
+                      className="inline-flex h-9 items-center rounded-sm border border-destructive/40 px-4 text-sm font-medium text-destructive hover:bg-destructive/10"
+                    >
+                      Delete
+                    </button>
+                    <button
                       onClick={() => download(p.id)}
                       disabled={downloading === p.id}
                       className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
@@ -344,6 +409,29 @@ function LibraryPage() {
       </div>
 
       {preview && <PartPreviewModal part={preview} onClose={() => setPreview(null)} />}
+
+      {editing && (
+        <UploaderEditDialog
+          part={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            qc.invalidateQueries({ queryKey: ["parts"] });
+          }}
+        />
+      )}
+
+      {deleting && (
+        <UploaderDeleteDialog
+          part={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setSelected((s) => s.filter((id) => id !== deleting.id));
+            setDeleting(null);
+            qc.invalidateQueries({ queryKey: ["parts"] });
+          }}
+        />
+      )}
     </SiteShell>
   );
 }
