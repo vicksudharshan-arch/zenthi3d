@@ -382,8 +382,14 @@ function LibraryPage() {
                     </Link>
                     <button
                       onClick={() =>
-                        setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                        setPreview({
+                          id: p.id,
+                          name: p.name,
+                          step_file_name: p.step_file_name,
+                          stl_file_name: p.stl_file_name,
+                        })
                       }
+
                       className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
                     >
                       Preview
