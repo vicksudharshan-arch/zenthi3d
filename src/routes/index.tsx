@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Community-shared STEP files for rare, non-safety-critical car parts. Browse the library or upload your own fix.",
+          "Community-shared STEP and STL files for rare, non-safety-critical car parts. Browse the library or upload your own fix.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -32,7 +32,7 @@ const STEPS = [
   {
     no: "02",
     title: "It gets shared here",
-    body: "STEP only — an editable CAD file goes straight to a machine shop or gets modified for a different fit. Add fitment details and the writeup.",
+    body: "A STEP file is required — editable CAD goes straight to a machine shop or gets modified for a different fit. Add an STL too if you have a print-ready one, plus fitment details and the writeup.",
   },
   {
     no: "03",

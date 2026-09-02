@@ -16,6 +16,9 @@ export type PartRow = {
   step_file_path: string | null;
   step_file_name: string | null;
   step_file_size: number | null;
+  stl_file_path: string | null;
+  stl_file_name: string | null;
+  stl_file_size: number | null;
   status: string;
   created_at: string;
 };
@@ -92,10 +95,10 @@ export const deleteParts = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("parts")
-      .select("step_file_path")
+      .select("step_file_path, stl_file_path")
       .in("id", data.ids);
     const paths = (rows ?? [])
-      .map((r) => r.step_file_path)
+      .flatMap((r) => [r.step_file_path, r.stl_file_path])
       .filter((p): p is string => !!p);
     if (paths.length)
       await supabaseAdmin.storage.from("part-files").remove(Array.from(new Set(paths)));
@@ -105,23 +108,27 @@ export const deleteParts = createServerFn({ method: "POST" })
   });
 
 export const getDownloadUrl = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string(), format: z.enum(["step", "stl"]).optional() }).parse(input),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error } = await supabaseAdmin
       .from("parts")
-      .select("step_file_path, step_file_name")
+      .select("step_file_path, step_file_name, stl_file_path, stl_file_name")
       .eq("id", data.id)
       .eq("status", "approved")
       .maybeSingle();
     if (error || !part) throw new Error(error?.message ?? "Part not found");
 
-    const path = part.step_file_path;
-    if (!path) throw new Error("No file is available for this part.");
+    const wantStl = data.format === "stl";
+    const path = wantStl ? part.stl_file_path : part.step_file_path;
+    const fileName = wantStl ? part.stl_file_name : part.step_file_name;
+    if (!path) throw new Error("That format isn't available for this part.");
 
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("part-files")
-      .createSignedUrl(path, 300, { download: part.step_file_name ?? path });
+      .createSignedUrl(path, 300, { download: fileName ?? path });
     if (signErr || !signed) throw new Error(signErr?.message ?? "Could not create download link");
     return { url: signed.signedUrl };
   });
@@ -188,12 +195,12 @@ export const deletePartAsUploader = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error: readErr } = await supabaseAdmin
       .from("parts")
-      .select("uploader_name, step_file_path")
+      .select("uploader_name, step_file_path, stl_file_path")
       .eq("id", data.id)
       .maybeSingle();
     if (readErr || !part) throw new Error("Part not found");
     if (!nameMatches(data.uploaderName, part.uploader_name)) return { ok: false as const };
-    const paths = [part.step_file_path].filter((p): p is string => !!p);
+    const paths = [part.step_file_path, part.stl_file_path].filter((p): p is string => !!p);
     if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
 
     const { error } = await supabaseAdmin.from("parts").delete().eq("id", data.id);
