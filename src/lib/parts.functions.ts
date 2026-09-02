@@ -90,34 +90,53 @@ export const deleteParts = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("parts")
-      .select("file_path")
+      .select("file_path, step_file_path, stl_file_path")
       .in("id", data.ids);
-    const paths = (rows ?? []).map((r) => r.file_path).filter(Boolean);
-    if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
+    const paths = (rows ?? [])
+      .flatMap((r) => [r.file_path, r.step_file_path, r.stl_file_path])
+      .filter((p): p is string => !!p);
+    if (paths.length)
+      await supabaseAdmin.storage.from("part-files").remove(Array.from(new Set(paths)));
     const { error } = await supabaseAdmin.from("parts").delete().in("id", data.ids);
     if (error) throw new Error(error.message);
     return { ok: true, deleted: data.ids.length };
   });
 
 export const getDownloadUrl = createServerFn({ method: "POST" })
-
-  .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string(), format: z.enum(["step", "stl"]).optional() }).parse(input),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error } = await supabaseAdmin
       .from("parts")
-      .select("file_path, file_name")
+      .select("file_path, file_name, step_file_path, step_file_name, stl_file_path, stl_file_name")
       .eq("id", data.id)
       .eq("status", "approved")
       .maybeSingle();
     if (error || !part) throw new Error(error?.message ?? "Part not found");
 
+    let path: string | null = null;
+    let fileName: string | null = null;
+    if (data.format === "step") {
+      path = part.step_file_path;
+      fileName = part.step_file_name;
+    } else if (data.format === "stl") {
+      path = part.stl_file_path;
+      fileName = part.stl_file_name;
+    } else {
+      path = part.step_file_path ?? part.stl_file_path ?? part.file_path;
+      fileName = part.step_file_name ?? part.stl_file_name ?? part.file_name;
+    }
+    if (!path) throw new Error("That format isn't available for this part.");
+
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("part-files")
-      .createSignedUrl(part.file_path, 300, { download: part.file_name });
+      .createSignedUrl(path, 300, { download: fileName ?? path });
     if (signErr || !signed) throw new Error(signErr?.message ?? "Could not create download link");
     return { url: signed.signedUrl };
   });
+
 
 // ---- Public, uploader-scoped actions (no auth system: name-on-record check) ----
 
