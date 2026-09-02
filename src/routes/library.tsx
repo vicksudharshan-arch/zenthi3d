@@ -4,7 +4,14 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES, CATEGORY_LABELS, type Category, vehicleLabel, type Vehicle } from "@/lib/parts";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CONTRIBUTOR_TYPE_LABELS,
+  type Category,
+  vehicleLabel,
+  type Vehicle,
+} from "@/lib/parts";
 import { getDownloadUrl } from "@/lib/parts.functions";
 
 export const Route = createFileRoute("/library")({
@@ -36,6 +43,7 @@ type Part = {
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
+  contributor_type: string;
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
@@ -54,7 +62,7 @@ function LibraryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,name,description,category,placement,material,thickness_infill,vehicles,notes,uploader_name,file_name,created_at")
+        .select("id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,file_name,created_at")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
