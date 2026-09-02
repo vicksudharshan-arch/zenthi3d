@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
+import { PartPreviewModal } from "@/components/part-preview-modal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIES,
@@ -15,7 +16,7 @@ import {
 } from "@/lib/parts";
 import { getDownloadUrl } from "@/lib/parts.functions";
 
-export const Route = createFileRoute("/library")({
+export const Route = createFileRoute("/library/")({
   validateSearch: (search: Record<string, unknown>): { part?: string } =>
     typeof search['part'] === "string" ? { part: search['part'] as string } : {},
 
@@ -62,6 +63,9 @@ function LibraryPage() {
   const [model, setModel] = useState("all");
   const [category, setCategory] = useState("all");
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ id: string; name: string; file_name: string } | null>(
+    null,
+  );
 
 
   const { data, isLoading } = useQuery({
@@ -118,7 +122,7 @@ function LibraryPage() {
   }
 
   async function copyLink(id: string) {
-    const url = `${window.location.origin}/library?part=${id}`;
+    const url = `${window.location.origin}/library/${id}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied");
@@ -224,6 +228,10 @@ function LibraryPage() {
               <article
                 key={p.id}
                 id={`part-${p.id}`}
+                onDoubleClick={() =>
+                  setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                }
+                title="Double-click to preview the file"
                 className={
                   "flex flex-col rounded-sm border bg-card p-6 transition-colors " +
                   (sharedId === p.id ? "border-brass ring-2 ring-brass/30" : "border-border")
@@ -298,6 +306,21 @@ function LibraryPage() {
                     )}
                   </p>
                   <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      to="/library/$partId"
+                      params={{ partId: p.id }}
+                      className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+                    >
+                      Details
+                    </Link>
+                    <button
+                      onClick={() =>
+                        setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                      }
+                      className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+                    >
+                      Preview
+                    </button>
                     <button
                       onClick={() => copyLink(p.id)}
                       className="inline-flex h-9 items-center rounded-sm border border-brass px-4 text-sm font-medium text-brass-foreground hover:bg-brass/15"
@@ -319,6 +342,8 @@ function LibraryPage() {
           </div>
         )}
       </div>
+
+      {preview && <PartPreviewModal part={preview} onClose={() => setPreview(null)} />}
     </SiteShell>
   );
 }
