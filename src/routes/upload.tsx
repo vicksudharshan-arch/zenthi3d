@@ -92,6 +92,7 @@ function UploadPage() {
         placement: placement.trim() || null,
         material: material.trim(),
         thickness_infill: thickness.trim(),
+        contributor_type: contributorType,
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
@@ -348,6 +349,24 @@ function UploadPage() {
                 onChange={(e) => setUploader(e.target.value)}
                 className={fieldCls}
               />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="contributorType">
+                You are a…
+              </label>
+              <select
+                id="contributorType"
+                required
+                value={contributorType}
+                onChange={(e) => setContributorType(e.target.value as ContributorType)}
+                className={fieldCls}
+              >
+                {CONTRIBUTOR_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {CONTRIBUTOR_TYPE_LABELS[t]}
+                  </option>
+                ))}
+              </select>
             </div>
           </fieldset>
 
