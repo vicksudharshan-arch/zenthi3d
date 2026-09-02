@@ -472,7 +472,7 @@ function UploadPage() {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              disabled={!licensed || submitting}
+              disabled={!licensed || submitting || (!stepFile && !stlFile)}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Uploading…" : "Submit for review"}
