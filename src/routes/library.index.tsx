@@ -357,9 +357,10 @@ function LibraryPage() {
                 <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-4">
                   <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                     <span>
-                      {p.file_name}
+                      {[p.step_file_name, p.stl_file_name].filter(Boolean).join(" · ")}
                       {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                     </span>
+
                     {(Array.isArray(p.contributor_type) ? p.contributor_type : [p.contributor_type]).map(
                       (t) => (
                         <span
