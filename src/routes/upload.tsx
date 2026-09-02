@@ -37,6 +37,9 @@ function UploadPage() {
   const [description, setDescription] = useState("");
   const [uploader, setUploader] = useState("");
   const [category, setCategory] = useState<Category>("bracket");
+  const [placement, setPlacement] = useState("");
+  const [material, setMaterial] = useState("");
+  const [thickness, setThickness] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([emptyVehicle()]);
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -77,6 +80,9 @@ function UploadPage() {
         name: name.trim(),
         description: description.trim(),
         category,
+        placement: placement.trim() || null,
+        material: material.trim(),
+        thickness_infill: thickness.trim(),
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
