@@ -215,6 +215,26 @@ function LibraryPage() {
                     ))}
                   </ul>
                 </div>
+                <dl className="mt-4 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
+                  {p.placement && (
+                    <div>
+                      <dt className="tech-label">Placement</dt>
+                      <dd className="mt-1 font-mono text-xs">{p.placement}</dd>
+                    </div>
+                  )}
+                  {p.material && (
+                    <div>
+                      <dt className="tech-label">Material</dt>
+                      <dd className="mt-1 font-mono text-xs">{p.material}</dd>
+                    </div>
+                  )}
+                  {p.thickness_infill && (
+                    <div>
+                      <dt className="tech-label">Thickness / infill</dt>
+                      <dd className="mt-1 font-mono text-xs">{p.thickness_infill}</dd>
+                    </div>
+                  )}
+                </dl>
                 {p.notes && (
                   <details className="mt-4 rounded-sm border border-border bg-secondary/50 p-4">
                     <summary className="tech-label cursor-pointer">Uploader's writeup</summary>
