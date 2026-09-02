@@ -31,7 +31,7 @@ export const Route = createFileRoute("/library/")({
       {
         name: "description",
         content:
-          "Browse community-shared STL and STEP files for brackets, housings, covers and trim, filtered by make, model and category.",
+          "Browse community-shared STEP files for brackets, housings, covers and trim, filtered by make, model and category.",
       },
       { property: "og:title", content: "Part library — Zenthi" },
       {
@@ -59,12 +59,11 @@ type Part = {
   notes: string | null;
   uploader_name: string | null;
   step_file_name: string | null;
-  stl_file_name: string | null;
   created_at: string;
 };
 
 const PART_COLUMNS =
-  "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,created_at";
+  "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,created_at";
 
 function LibraryPage() {
   const { part: sharedId } = Route.useSearch();
@@ -76,8 +75,7 @@ function LibraryPage() {
     id: string;
     name: string;
     step_file_name: string | null;
-    stl_file_name: string | null;
-  } | null>(null);
+    } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<EditablePart | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
@@ -129,10 +127,10 @@ function LibraryPage() {
     return true;
   });
 
-  async function download(id: string, format: "step" | "stl") {
-    setDownloading(`${id}:${format}`);
+  async function download(id: string) {
+    setDownloading(`${id}:step`);
     try {
-      const { url } = await getDownloadUrl({ data: { id, format } });
+      const { url } = await getDownloadUrl({ data: { id } });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
@@ -270,7 +268,6 @@ function LibraryPage() {
                     id: p.id,
                     name: p.name,
                     step_file_name: p.step_file_name,
-                    stl_file_name: p.stl_file_name,
                   })
                 }
 
@@ -319,11 +316,6 @@ function LibraryPage() {
                       STEP · editable
                     </span>
                   )}
-                  {p.stl_file_name && (
-                    <span className="rounded-sm border border-brass px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-brass-foreground uppercase">
-                      STL · print-ready
-                    </span>
-                  )}
                 </div>
                 <dl className="mt-4 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
 
@@ -357,7 +349,7 @@ function LibraryPage() {
                 <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-4">
                   <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                     <span>
-                      {[p.step_file_name, p.stl_file_name].filter(Boolean).join(" · ")}
+                      {p.step_file_name}
                       {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                     </span>
 
@@ -386,7 +378,6 @@ function LibraryPage() {
                           id: p.id,
                           name: p.name,
                           step_file_name: p.step_file_name,
-                          stl_file_name: p.stl_file_name,
                         })
                       }
 
@@ -430,20 +421,11 @@ function LibraryPage() {
                     </button>
                     {p.step_file_name && (
                       <button
-                        onClick={() => download(p.id, "step")}
+                        onClick={() => download(p.id)}
                         disabled={downloading === `${p.id}:step`}
                         className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                       >
                         {downloading === `${p.id}:step` ? "Preparing…" : "Download STEP"}
-                      </button>
-                    )}
-                    {p.stl_file_name && (
-                      <button
-                        onClick={() => download(p.id, "stl")}
-                        disabled={downloading === `${p.id}:stl`}
-                        className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
-                      >
-                        {downloading === `${p.id}:stl` ? "Preparing…" : "Download STL"}
                       </button>
                     )}
 

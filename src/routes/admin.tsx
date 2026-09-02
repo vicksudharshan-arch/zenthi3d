@@ -166,9 +166,7 @@ function AdminPage() {
                       <h2 className="font-display text-xl font-semibold">{p.name}</h2>
                       <p className="mt-1 font-mono text-xs text-muted-foreground">
                         {CATEGORY_LABELS[p.category as Category] ?? p.category} ·{" "}
-                        {[p.step_file_name, p.stl_file_name, p.file_name]
-                          .filter(Boolean)
-                          .join(" · ") || "no file"}{" "}
+                        {p.step_file_name}
                         ·{" "}
 
                         {new Date(p.created_at).toLocaleDateString()}
