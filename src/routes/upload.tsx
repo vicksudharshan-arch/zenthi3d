@@ -468,7 +468,15 @@ function UploadPage() {
                 .
               </span>
             </label>
+            <p className="mt-3 pl-7 font-mono text-xs text-muted-foreground">
+              See our{" "}
+              <Link to="/copyright-policy" className="underline underline-offset-2 hover:text-foreground">
+                copyright policy
+              </Link>{" "}
+              for more.
+            </p>
           </div>
+
 
           <div className="flex items-center gap-4">
             <button
