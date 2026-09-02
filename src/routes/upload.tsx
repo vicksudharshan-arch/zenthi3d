@@ -37,6 +37,9 @@ function UploadPage() {
   const [description, setDescription] = useState("");
   const [uploader, setUploader] = useState("");
   const [category, setCategory] = useState<Category>("bracket");
+  const [placement, setPlacement] = useState("");
+  const [material, setMaterial] = useState("");
+  const [thickness, setThickness] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([emptyVehicle()]);
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -77,6 +80,9 @@ function UploadPage() {
         name: name.trim(),
         description: description.trim(),
         category,
+        placement: placement.trim() || null,
+        material: material.trim(),
+        thickness_infill: thickness.trim(),
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
@@ -184,6 +190,56 @@ function UploadPage() {
                 ))}
               </select>
             </div>
+            <div>
+              <label className={labelCls} htmlFor="placement">
+                Placement (optional)
+              </label>
+              <input
+                id="placement"
+                value={placement}
+                onChange={(e) => setPlacement(e.target.value)}
+                placeholder="Where on the vehicle this installs — e.g. driver-side dash vent"
+                className={fieldCls}
+              />
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <label className={labelCls} htmlFor="material">
+                  Recommended material
+                </label>
+                <input
+                  id="material"
+                  required
+                  list="materials"
+                  value={material}
+                  onChange={(e) => setMaterial(e.target.value)}
+                  placeholder="PETG"
+                  className={fieldCls}
+                />
+                <datalist id="materials">
+                  <option value="PLA" />
+                  <option value="PETG" />
+                  <option value="ABS" />
+                  <option value="ASA" />
+                  <option value="Nylon (PA)" />
+                  <option value="TPU" />
+                  <option value="Polycarbonate" />
+                </datalist>
+              </div>
+              <div>
+                <label className={labelCls} htmlFor="thickness">
+                  Recommended thickness / infill
+                </label>
+                <input
+                  id="thickness"
+                  required
+                  value={thickness}
+                  onChange={(e) => setThickness(e.target.value)}
+                  placeholder="4 walls · 40% infill"
+                  className={fieldCls}
+                />
+              </div>
+            </div>
           </fieldset>
 
           <fieldset className="space-y-4">
@@ -274,10 +330,11 @@ function UploadPage() {
             </div>
             <div>
               <label className={labelCls} htmlFor="uploader">
-                Your name or handle (optional)
+                Your name or handle
               </label>
               <input
                 id="uploader"
+                required
                 value={uploader}
                 onChange={(e) => setUploader(e.target.value)}
                 className={fieldCls}

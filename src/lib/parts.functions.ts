@@ -6,6 +6,9 @@ export type PartRow = {
   name: string;
   description: string;
   category: string;
+  placement: string | null;
+  material: string | null;
+  thickness_infill: string | null;
   vehicles: { make: string; model: string; yearFrom: string; yearTo: string }[];
   notes: string | null;
   uploader_name: string | null;

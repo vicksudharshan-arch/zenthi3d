@@ -33,6 +33,9 @@ type Part = {
   name: string;
   description: string;
   category: string;
+  placement: string | null;
+  material: string | null;
+  thickness_infill: string | null;
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
@@ -51,7 +54,7 @@ function LibraryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,name,description,category,vehicles,notes,uploader_name,file_name,created_at")
+        .select("id,name,description,category,placement,material,thickness_infill,vehicles,notes,uploader_name,file_name,created_at")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -212,6 +215,26 @@ function LibraryPage() {
                     ))}
                   </ul>
                 </div>
+                <dl className="mt-4 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
+                  {p.placement && (
+                    <div>
+                      <dt className="tech-label">Placement</dt>
+                      <dd className="mt-1 font-mono text-xs">{p.placement}</dd>
+                    </div>
+                  )}
+                  {p.material && (
+                    <div>
+                      <dt className="tech-label">Material</dt>
+                      <dd className="mt-1 font-mono text-xs">{p.material}</dd>
+                    </div>
+                  )}
+                  {p.thickness_infill && (
+                    <div>
+                      <dt className="tech-label">Thickness / infill</dt>
+                      <dd className="mt-1 font-mono text-xs">{p.thickness_infill}</dd>
+                    </div>
+                  )}
+                </dl>
                 {p.notes && (
                   <details className="mt-4 rounded-sm border border-border bg-secondary/50 p-4">
                     <summary className="tech-label cursor-pointer">Uploader's writeup</summary>
