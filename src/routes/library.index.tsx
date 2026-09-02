@@ -62,6 +62,9 @@ function LibraryPage() {
   const [model, setModel] = useState("all");
   const [category, setCategory] = useState("all");
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ id: string; name: string; file_name: string } | null>(
+    null,
+  );
 
 
   const { data, isLoading } = useQuery({
