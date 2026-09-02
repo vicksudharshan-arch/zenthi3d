@@ -10,13 +10,13 @@ import { getDownloadUrl } from "@/lib/parts.functions";
 export const Route = createFileRoute("/library")({
   head: () => ({
     meta: [
-      { title: "Part library — Scarpa" },
+      { title: "Part library — Zenthi" },
       {
         name: "description",
         content:
           "Browse community-shared STL and STEP files for brackets, housings, covers and trim, filtered by make, model and category.",
       },
-      { property: "og:title", content: "Part library — Scarpa" },
+      { property: "og:title", content: "Part library — Zenthi" },
       {
         property: "og:description",
         content: "Downloadable 3D-printable parts for exotic and high-performance cars.",

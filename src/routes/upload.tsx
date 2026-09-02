@@ -8,13 +8,13 @@ import { CATEGORIES, CATEGORY_LABELS, type Category, type Vehicle } from "@/lib/
 export const Route = createFileRoute("/upload")({
   head: () => ({
     meta: [
-      { title: "Upload a part file — Scarpa" },
+      { title: "Upload a part file — Zenthi" },
       {
         name: "description",
         content:
           "Share an STL or STEP file for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
       },
-      { property: "og:title", content: "Upload a part file — Scarpa" },
+      { property: "og:title", content: "Upload a part file — Zenthi" },
       {
         property: "og:description",
         content: "Contribute an STL or STEP file and the story of how you solved the problem.",
@@ -294,7 +294,7 @@ function UploadPage() {
                 className="mt-1 size-4 shrink-0 accent-[var(--brass)]"
               />
               <span>
-                I created this file or have the right to share it, and I grant Scarpa a license to
+                I created this file or have the right to share it, and I grant Zenthi a license to
                 host and redistribute it under the{" "}
                 <a
                   href="https://creativecommons.org/licenses/by/4.0/"

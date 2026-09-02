@@ -9,12 +9,12 @@ import { listAllParts, setPartStatus } from "@/lib/parts.functions";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Review queue — Scarpa" },
+      { title: "Review queue — Zenthi" },
       {
         name: "description",
-        content: "Internal review queue for approving or rejecting submitted Scarpa part files.",
+        content: "Internal review queue for approving or rejecting submitted Zenthi part files.",
       },
-      { property: "og:title", content: "Review queue — Scarpa" },
+      { property: "og:title", content: "Review queue — Zenthi" },
       { property: "og:description", content: "Approve or reject submitted part files." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

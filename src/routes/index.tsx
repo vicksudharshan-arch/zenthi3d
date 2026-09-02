@@ -4,13 +4,13 @@ import { SiteShell } from "@/components/site-shell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Scarpa — 3D-printable parts for cars nobody else supports" },
+      { title: "Zenthi — 3D-printable parts for cars nobody else supports" },
       {
         name: "description",
         content:
           "A free community library of 3D-printable brackets, housings, covers and trim for exotic and high-performance cars. Share the fix instead of losing it in a forum thread.",
       },
-      { property: "og:title", content: "Scarpa — a shared library of 3D-printable car parts" },
+      { property: "og:title", content: "Zenthi — a shared library of 3D-printable car parts" },
       {
         property: "og:description",
         content:
@@ -53,7 +53,7 @@ function Index() {
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Enthusiasts already figure out how to adapt and fabricate rare parts for exotic and
             high-performance cars — measuring the broken bracket, modelling it at 2am, printing five
-            revisions until it clicks in. Scarpa is a place to share those solved problems, instead
+            revisions until it clicks in. Zenthi is a place to share those solved problems, instead
             of losing them in old forum threads.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -96,7 +96,7 @@ function Index() {
             Cosmetic and functional, never structural.
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Scarpa accepts brackets, housings, covers and trim. It does not accept brakes,
+            Zenthi accepts brackets, housings, covers and trim. It does not accept brakes,
             suspension, structural components or fuel-system parts — printed polymer has no business
             holding a car together or containing fuel. Submissions in those categories are rejected
             in review.
