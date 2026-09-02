@@ -226,7 +226,7 @@ function LibraryPage() {
                 <dl className="mt-4 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
                   {p.placement && (
                     <div>
-                      <dt className="tech-label">Placement</dt>
+                      <dt className="tech-label">Recommended placement</dt>
                       <dd className="mt-1 font-mono text-xs">{p.placement}</dd>
                     </div>
                   )}
