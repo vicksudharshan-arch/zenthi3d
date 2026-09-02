@@ -56,8 +56,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
-            Uploads licensed CC BY 4.0 · No brakes, suspension, structural or fuel-system parts
+            Uploads licensed CC BY 4.0 · No brakes, suspension, structural or fuel-system parts ·{" "}
+            <Link to="/copyright-policy" className="underline underline-offset-2 hover:text-foreground">
+              Report a copyright concern
+            </Link>
           </p>
+
         </div>
       </footer>
     </div>
