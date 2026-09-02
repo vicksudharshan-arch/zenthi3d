@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
+import { PartPreviewModal } from "@/components/part-preview-modal";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIES,
