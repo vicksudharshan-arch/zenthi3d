@@ -184,9 +184,10 @@ function PartDetailPage() {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
               <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                 <span>
-                  {data.file_name}
+                  {[data.step_file_name, data.stl_file_name].filter(Boolean).join(" · ")}
                   {data.uploader_name ? ` · ${data.uploader_name}` : ""}
                 </span>
+
                 {(Array.isArray(data.contributor_type)
                   ? data.contributor_type
                   : [data.contributor_type]
