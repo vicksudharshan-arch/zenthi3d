@@ -15,7 +15,7 @@ import {
 } from "@/lib/parts";
 import { getDownloadUrl } from "@/lib/parts.functions";
 
-export const Route = createFileRoute("/library")({
+export const Route = createFileRoute("/library/")({
   validateSearch: (search: Record<string, unknown>): { part?: string } =>
     typeof search['part'] === "string" ? { part: search['part'] as string } : {},
 
