@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,9 @@ import {
 import { getDownloadUrl } from "@/lib/parts.functions";
 
 export const Route = createFileRoute("/library")({
+  validateSearch: (search: Record<string, unknown>): { part?: string } =>
+    typeof search['part'] === "string" ? { part: search['part'] as string } : {},
+
   head: () => ({
     meta: [
       { title: "Part library — Zenthi" },
@@ -35,6 +39,7 @@ export const Route = createFileRoute("/library")({
   component: LibraryPage,
 });
 
+
 type Part = {
   id: string;
   name: string;
@@ -52,10 +57,12 @@ type Part = {
 };
 
 function LibraryPage() {
+  const { part: sharedId } = Route.useSearch();
   const [make, setMake] = useState("all");
   const [model, setModel] = useState("all");
   const [category, setCategory] = useState("all");
   const [downloading, setDownloading] = useState<string | null>(null);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["parts", "approved"],
@@ -109,6 +116,23 @@ function LibraryPage() {
       setDownloading(null);
     }
   }
+
+  async function copyLink(id: string) {
+    const url = `${window.location.origin}/library?part=${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      window.prompt("Copy this link", url);
+    }
+  }
+
+  useEffect(() => {
+    if (!sharedId || isLoading) return;
+    const el = document.getElementById(`part-${sharedId}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [sharedId, isLoading]);
+
 
   const selectCls =
     "rounded-sm border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/25";
@@ -199,8 +223,13 @@ function LibraryPage() {
             {filtered.map((p) => (
               <article
                 key={p.id}
-                className="flex flex-col rounded-sm border border-border bg-card p-6"
+                id={`part-${p.id}`}
+                className={
+                  "flex flex-col rounded-sm border bg-card p-6 transition-colors " +
+                  (sharedId === p.id ? "border-brass ring-2 ring-brass/30" : "border-border")
+                }
               >
+
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="font-display text-xl font-semibold tracking-tight">{p.name}</h2>
                   <span className="shrink-0 rounded-sm bg-accent px-2 py-1 font-mono text-[0.65rem] tracking-widest text-accent-foreground uppercase">
@@ -268,13 +297,22 @@ function LibraryPage() {
                       ),
                     )}
                   </p>
-                  <button
-                    onClick={() => download(p.id)}
-                    disabled={downloading === p.id}
-                    className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {downloading === p.id ? "Preparing…" : "Download"}
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      onClick={() => copyLink(p.id)}
+                      className="inline-flex h-9 items-center rounded-sm border border-brass px-4 text-sm font-medium text-brass-foreground hover:bg-brass/15"
+                    >
+                      Share link
+                    </button>
+                    <button
+                      onClick={() => download(p.id)}
+                      disabled={downloading === p.id}
+                      className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {downloading === p.id ? "Preparing…" : "Download"}
+                    </button>
+                  </div>
+
                 </div>
               </article>
             ))}
