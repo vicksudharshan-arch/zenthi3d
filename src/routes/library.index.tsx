@@ -129,10 +129,10 @@ function LibraryPage() {
     return true;
   });
 
-  async function download(id: string) {
-    setDownloading(id);
+  async function download(id: string, format: "step" | "stl") {
+    setDownloading(`${id}:${format}`);
     try {
-      const { url } = await getDownloadUrl({ data: { id } });
+      const { url } = await getDownloadUrl({ data: { id, format } });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
@@ -140,6 +140,7 @@ function LibraryPage() {
       setDownloading(null);
     }
   }
+
 
   async function copyLink(id: string) {
     const url = `${window.location.origin}/library/${id}`;
