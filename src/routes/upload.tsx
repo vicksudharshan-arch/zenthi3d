@@ -3,7 +3,15 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES, CATEGORY_LABELS, type Category, type Vehicle } from "@/lib/parts";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CONTRIBUTOR_TYPES,
+  CONTRIBUTOR_TYPE_LABELS,
+  type Category,
+  type ContributorType,
+  type Vehicle,
+} from "@/lib/parts";
 
 export const Route = createFileRoute("/upload")({
   head: () => ({
@@ -36,6 +44,7 @@ function UploadPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [uploader, setUploader] = useState("");
+  const [contributorType, setContributorType] = useState<ContributorType>("restorer");
   const [category, setCategory] = useState<Category>("bracket");
   const [placement, setPlacement] = useState("");
   const [material, setMaterial] = useState("");
@@ -83,6 +92,7 @@ function UploadPage() {
         placement: placement.trim() || null,
         material: material.trim(),
         thickness_infill: thickness.trim(),
+        contributor_type: contributorType,
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
@@ -339,6 +349,24 @@ function UploadPage() {
                 onChange={(e) => setUploader(e.target.value)}
                 className={fieldCls}
               />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="contributorType">
+                You are a…
+              </label>
+              <select
+                id="contributorType"
+                required
+                value={contributorType}
+                onChange={(e) => setContributorType(e.target.value as ContributorType)}
+                className={fieldCls}
+              >
+                {CONTRIBUTOR_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {CONTRIBUTOR_TYPE_LABELS[t]}
+                  </option>
+                ))}
+              </select>
             </div>
           </fieldset>
 

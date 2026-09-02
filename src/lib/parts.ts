@@ -9,6 +9,16 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   other: "Other",
 };
 
+export const CONTRIBUTOR_TYPES = ["restorer", "enthusiast", "professional_shop", "other"] as const;
+export type ContributorType = (typeof CONTRIBUTOR_TYPES)[number];
+
+export const CONTRIBUTOR_TYPE_LABELS: Record<ContributorType, string> = {
+  restorer: "Restorer",
+  enthusiast: "Enthusiast",
+  professional_shop: "Professional automotive shop owner",
+  other: "Other",
+};
+
 export type Vehicle = { make: string; model: string; yearFrom: string; yearTo: string };
 
 export function vehicleLabel(v: Vehicle) {

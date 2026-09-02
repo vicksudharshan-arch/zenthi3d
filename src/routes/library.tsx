@@ -4,7 +4,14 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES, CATEGORY_LABELS, type Category, vehicleLabel, type Vehicle } from "@/lib/parts";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CONTRIBUTOR_TYPE_LABELS,
+  type Category,
+  vehicleLabel,
+  type Vehicle,
+} from "@/lib/parts";
 import { getDownloadUrl } from "@/lib/parts.functions";
 
 export const Route = createFileRoute("/library")({
@@ -36,6 +43,7 @@ type Part = {
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
+  contributor_type: string;
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
@@ -54,7 +62,7 @@ function LibraryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,name,description,category,placement,material,thickness_infill,vehicles,notes,uploader_name,file_name,created_at")
+        .select("id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,file_name,created_at")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -244,9 +252,14 @@ function LibraryPage() {
                   </details>
                 )}
                 <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-4">
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {p.file_name}
-                    {p.uploader_name ? ` · ${p.uploader_name}` : ""}
+                  <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
+                    <span>
+                      {p.file_name}
+                      {p.uploader_name ? ` · ${p.uploader_name}` : ""}
+                    </span>
+                    <span className="rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground">
+                      {CONTRIBUTOR_TYPE_LABELS[p.contributor_type as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? p.contributor_type}
+                    </span>
                   </p>
                   <button
                     onClick={() => download(p.id)}
