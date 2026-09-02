@@ -330,23 +330,55 @@ function UploadPage() {
           </fieldset>
 
           <fieldset className="space-y-6">
-            <legend className="tech-label mb-4 text-brass">03 — File & writeup</legend>
+            <legend className="tech-label mb-4 text-brass">03 — Files & writeup</legend>
+            <p className="rounded-sm border border-brass/50 bg-brass/10 p-4 text-sm leading-relaxed">
+              If you only have one format, STEP is more useful to the community — it can be
+              exported to STL, but not the other way around.
+            </p>
             <div>
-              <label className={labelCls} htmlFor="file">
-                File (STL or STEP)
+              <label className={labelCls} htmlFor="stepFile">
+                STEP file (recommended)
               </label>
               <input
-                id="file"
+                id="stepFile"
                 type="file"
-                required
-                accept=".stl,.step,.stp,model/stl,application/step"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                accept=".step,.stp,application/step"
+                onChange={(e) => setStepFile(e.target.files?.[0] ?? null)}
                 className={
                   fieldCls +
                   " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground"
                 }
               />
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Editable CAD file. This is what most machine shops need, and lets others modify the
+                design if they need a different fit.
+              </p>
             </div>
+            <div>
+              <label className={labelCls} htmlFor="stlFile">
+                STL file (optional)
+              </label>
+              <input
+                id="stlFile"
+                type="file"
+                accept=".stl,model/stl"
+                onChange={(e) => setStlFile(e.target.files?.[0] ?? null)}
+                className={
+                  fieldCls +
+                  " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground"
+                }
+              />
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Ready-to-print mesh file. Include this too if you have a print-ready version, but
+                note it can't be easily edited.
+              </p>
+            </div>
+            {!stepFile && !stlFile && (
+              <p className="font-mono text-xs text-muted-foreground">
+                Attach at least one file — STEP, STL, or both.
+              </p>
+            )}
+
             <div>
               <label className={labelCls} htmlFor="notes">
                 How you solved it (optional)
