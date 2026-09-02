@@ -20,6 +20,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <Wordmark />
           <nav className="flex items-center gap-1 text-sm">
             <Link
+              to="/"
+              className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+            >
+              Home
+            </Link>
+            <Link
               to="/library"
               className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
             >
