@@ -31,12 +31,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
             >
               Upload
             </Link>
-            <Link
-              to="/admin"
-              className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
-            >
-              Review
-            </Link>
           </nav>
         </div>
       </header>
