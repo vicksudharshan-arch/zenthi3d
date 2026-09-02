@@ -58,9 +58,13 @@ type Part = {
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
-  file_name: string;
+  step_file_name: string | null;
+  stl_file_name: string | null;
   created_at: string;
 };
+
+const PART_COLUMNS =
+  "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,created_at";
 
 function LibraryPage() {
   const { part: sharedId } = Route.useSearch();
@@ -68,9 +72,12 @@ function LibraryPage() {
   const [model, setModel] = useState("all");
   const [category, setCategory] = useState("all");
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [preview, setPreview] = useState<{ id: string; name: string; file_name: string } | null>(
-    null,
-  );
+  const [preview, setPreview] = useState<{
+    id: string;
+    name: string;
+    step_file_name: string | null;
+    stl_file_name: string | null;
+  } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<EditablePart | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
@@ -82,13 +89,14 @@ function LibraryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,file_name,created_at")
+        .select(PART_COLUMNS)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Part[];
     },
   });
+
 
   const parts = data ?? [];
 
