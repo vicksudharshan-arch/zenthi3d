@@ -58,9 +58,13 @@ type Part = {
   vehicles: Vehicle[];
   notes: string | null;
   uploader_name: string | null;
-  file_name: string;
+  step_file_name: string | null;
+  stl_file_name: string | null;
   created_at: string;
 };
+
+const PART_COLUMNS =
+  "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,created_at";
 
 function LibraryPage() {
   const { part: sharedId } = Route.useSearch();
@@ -68,9 +72,12 @@ function LibraryPage() {
   const [model, setModel] = useState("all");
   const [category, setCategory] = useState("all");
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [preview, setPreview] = useState<{ id: string; name: string; file_name: string } | null>(
-    null,
-  );
+  const [preview, setPreview] = useState<{
+    id: string;
+    name: string;
+    step_file_name: string | null;
+    stl_file_name: string | null;
+  } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<EditablePart | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
@@ -82,13 +89,14 @@ function LibraryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parts")
-        .select("id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,file_name,created_at")
+        .select(PART_COLUMNS)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Part[];
     },
   });
+
 
   const parts = data ?? [];
 
@@ -121,10 +129,10 @@ function LibraryPage() {
     return true;
   });
 
-  async function download(id: string) {
-    setDownloading(id);
+  async function download(id: string, format: "step" | "stl") {
+    setDownloading(`${id}:${format}`);
     try {
-      const { url } = await getDownloadUrl({ data: { id } });
+      const { url } = await getDownloadUrl({ data: { id, format } });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
@@ -132,6 +140,7 @@ function LibraryPage() {
       setDownloading(null);
     }
   }
+
 
   async function copyLink(id: string) {
     const url = `${window.location.origin}/library/${id}`;
@@ -257,8 +266,14 @@ function LibraryPage() {
                 key={p.id}
                 id={`part-${p.id}`}
                 onDoubleClick={() =>
-                  setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                  setPreview({
+                    id: p.id,
+                    name: p.name,
+                    step_file_name: p.step_file_name,
+                    stl_file_name: p.stl_file_name,
+                  })
                 }
+
                 title="Double-click to preview the file"
                 className={
                   "flex flex-col rounded-sm border bg-card p-6 transition-colors " +
@@ -297,7 +312,21 @@ function LibraryPage() {
                     ))}
                   </ul>
                 </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="tech-label">Formats</span>
+                  {p.step_file_name && (
+                    <span className="rounded-sm border border-primary px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-primary uppercase">
+                      STEP · editable
+                    </span>
+                  )}
+                  {p.stl_file_name && (
+                    <span className="rounded-sm border border-brass px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-brass-foreground uppercase">
+                      STL · print-ready
+                    </span>
+                  )}
+                </div>
                 <dl className="mt-4 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
+
                   {p.placement && (
                     <div>
                       <dt className="tech-label">Recommended placement</dt>
@@ -328,9 +357,10 @@ function LibraryPage() {
                 <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-4">
                   <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                     <span>
-                      {p.file_name}
+                      {[p.step_file_name, p.stl_file_name].filter(Boolean).join(" · ")}
                       {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                     </span>
+
                     {(Array.isArray(p.contributor_type) ? p.contributor_type : [p.contributor_type]).map(
                       (t) => (
                         <span
@@ -352,8 +382,14 @@ function LibraryPage() {
                     </Link>
                     <button
                       onClick={() =>
-                        setPreview({ id: p.id, name: p.name, file_name: p.file_name })
+                        setPreview({
+                          id: p.id,
+                          name: p.name,
+                          step_file_name: p.step_file_name,
+                          stl_file_name: p.stl_file_name,
+                        })
                       }
+
                       className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
                     >
                       Preview
@@ -392,13 +428,25 @@ function LibraryPage() {
                     >
                       Delete
                     </button>
-                    <button
-                      onClick={() => download(p.id)}
-                      disabled={downloading === p.id}
-                      className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      {downloading === p.id ? "Preparing…" : "Download"}
-                    </button>
+                    {p.step_file_name && (
+                      <button
+                        onClick={() => download(p.id, "step")}
+                        disabled={downloading === `${p.id}:step`}
+                        className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        {downloading === `${p.id}:step` ? "Preparing…" : "Download STEP"}
+                      </button>
+                    )}
+                    {p.stl_file_name && (
+                      <button
+                        onClick={() => download(p.id, "stl")}
+                        disabled={downloading === `${p.id}:stl`}
+                        className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+                      >
+                        {downloading === `${p.id}:stl` ? "Preparing…" : "Download STL"}
+                      </button>
+                    )}
+
                   </div>
 
                 </div>

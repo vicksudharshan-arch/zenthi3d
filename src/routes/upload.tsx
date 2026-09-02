@@ -51,7 +51,8 @@ function UploadPage() {
   const [thickness, setThickness] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([emptyVehicle()]);
   const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [stepFile, setStepFile] = useState<File | null>(null);
+  const [stlFile, setStlFile] = useState<File | null>(null);
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -59,16 +60,31 @@ function UploadPage() {
   const updateVehicle = (i: number, patch: Partial<Vehicle>) =>
     setVehicles((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
+  async function uploadFile(f: File) {
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("part-files").upload(path, f, {
+      contentType: f.type || "application/octet-stream",
+    });
+    if (error) throw error;
+    return path;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!licensed) return;
-    if (!file) {
-      toast.error("Attach an STL or STEP file.");
+    if (!stepFile && !stlFile) {
+      toast.error("Attach at least one file — a STEP file, an STL file, or both.");
       return;
     }
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!["stl", "step", "stp"].includes(ext)) {
-      toast.error("Only STL and STEP files are accepted.");
+    const stepExt = stepFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stepFile && !["step", "stp"].includes(stepExt)) {
+      toast.error("The STEP field only accepts .step or .stp files.");
+      return;
+    }
+    const stlExt = stlFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stlFile && stlExt !== "stl") {
+      toast.error("The STL field only accepts .stl files.");
       return;
     }
     const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
@@ -83,11 +99,8 @@ function UploadPage() {
 
     setSubmitting(true);
     try {
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("part-files").upload(path, file, {
-        contentType: file.type || "application/octet-stream",
-      });
-      if (upErr) throw upErr;
+      const stepPath = stepFile ? await uploadFile(stepFile) : null;
+      const stlPath = stlFile ? await uploadFile(stlFile) : null;
 
       const { error } = await supabase.from("parts").insert({
         name: name.trim(),
@@ -100,9 +113,12 @@ function UploadPage() {
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
-        file_path: path,
-        file_name: file.name,
-        file_size: file.size,
+        step_file_path: stepPath,
+        step_file_name: stepFile?.name ?? null,
+        step_file_size: stepFile?.size ?? null,
+        stl_file_path: stlPath,
+        stl_file_name: stlFile?.name ?? null,
+        stl_file_size: stlFile?.size ?? null,
         license_accepted: true,
         status: "pending",
       });
@@ -115,6 +131,7 @@ function UploadPage() {
       setSubmitting(false);
     }
   }
+
 
   if (done) {
     return (
@@ -313,23 +330,55 @@ function UploadPage() {
           </fieldset>
 
           <fieldset className="space-y-6">
-            <legend className="tech-label mb-4 text-brass">03 — File & writeup</legend>
+            <legend className="tech-label mb-4 text-brass">03 — Files & writeup</legend>
+            <p className="rounded-sm border border-brass/50 bg-brass/10 p-4 text-sm leading-relaxed">
+              If you only have one format, STEP is more useful to the community — it can be
+              exported to STL, but not the other way around.
+            </p>
             <div>
-              <label className={labelCls} htmlFor="file">
-                File (STL or STEP)
+              <label className={labelCls} htmlFor="stepFile">
+                STEP file (recommended)
               </label>
               <input
-                id="file"
+                id="stepFile"
                 type="file"
-                required
-                accept=".stl,.step,.stp,model/stl,application/step"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                accept=".step,.stp,application/step"
+                onChange={(e) => setStepFile(e.target.files?.[0] ?? null)}
                 className={
                   fieldCls +
                   " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground"
                 }
               />
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Editable CAD file. This is what most machine shops need, and lets others modify the
+                design if they need a different fit.
+              </p>
             </div>
+            <div>
+              <label className={labelCls} htmlFor="stlFile">
+                STL file (optional)
+              </label>
+              <input
+                id="stlFile"
+                type="file"
+                accept=".stl,model/stl"
+                onChange={(e) => setStlFile(e.target.files?.[0] ?? null)}
+                className={
+                  fieldCls +
+                  " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground"
+                }
+              />
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Ready-to-print mesh file. Include this too if you have a print-ready version, but
+                note it can't be easily edited.
+              </p>
+            </div>
+            {!stepFile && !stlFile && (
+              <p className="font-mono text-xs text-muted-foreground">
+                Attach at least one file — STEP, STL, or both.
+              </p>
+            )}
+
             <div>
               <label className={labelCls} htmlFor="notes">
                 How you solved it (optional)
@@ -423,7 +472,7 @@ function UploadPage() {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              disabled={!licensed || submitting}
+              disabled={!licensed || submitting || (!stepFile && !stlFile)}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Uploading…" : "Submit for review"}

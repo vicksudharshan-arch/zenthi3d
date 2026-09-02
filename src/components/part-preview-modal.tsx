@@ -4,7 +4,8 @@ import { getDownloadUrl } from "@/lib/parts.functions";
 type PreviewPart = {
   id: string;
   name: string;
-  file_name: string;
+  step_file_name?: string | null;
+  stl_file_name?: string | null;
 };
 
 export function PartPreviewModal({
@@ -18,8 +19,9 @@ export function PartPreviewModal({
   const [status, setStatus] = useState<"loading" | "ready" | "unsupported" | "error">("loading");
   const [message, setMessage] = useState("");
 
-  const ext = part.file_name.split(".").pop()?.toLowerCase() ?? "";
-  const isStl = ext === "stl";
+  const isStl = !!part.stl_file_name;
+  const displayName = part.stl_file_name ?? part.step_file_name ?? "";
+
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -44,7 +46,7 @@ export function PartPreviewModal({
           import("three/examples/jsm/loaders/STLLoader.js"),
           import("three/examples/jsm/controls/OrbitControls.js"),
         ]);
-        const { url } = await getDownloadUrl({ data: { id: part.id } });
+        const { url } = await getDownloadUrl({ data: { id: part.id, format: "stl" } });
         const res = await fetch(url);
         if (!res.ok) throw new Error("Could not fetch file");
         const buffer = await res.arrayBuffer();
@@ -162,14 +164,16 @@ export function PartPreviewModal({
               {status === "unsupported" && (
                 <>
                   <span className="rounded-sm border border-brass px-3 py-1 font-mono text-xs tracking-widest text-brass-foreground uppercase">
-                    {ext || "file"} format
+                    STEP · editable CAD
                   </span>
                   <p className="font-display text-xl font-semibold">
-                    No in-browser 3D preview for this format
+                    This part ships as an editable STEP file
                   </p>
                   <p className="max-w-md text-sm text-muted-foreground">
-                    {part.file_name} — STEP and other CAD formats need a desktop CAD or slicer
-                    application. Download the file to inspect the geometry.
+                    {displayName} — STEP is the preferred format here: it goes straight to a machine
+                    shop and can be modified in any CAD package, or exported to STL for printing. It
+                    just can't be rendered in the browser, so download it and open it in CAD or your
+                    slicer.
                   </p>
                 </>
               )}
@@ -182,9 +186,10 @@ export function PartPreviewModal({
           )}
         </div>
         <p className="border-t border-border px-6 py-3 font-mono text-xs text-muted-foreground">
-          {part.file_name}
+          {displayName}
           {isStl ? " · drag to rotate, scroll to zoom" : ""}
         </p>
+
       </div>
     </div>
   );
