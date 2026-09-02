@@ -22,6 +22,8 @@ export type PartRow = {
 
 
 export const listAllParts = createServerFn({ method: "GET" }).handler(async () => {
+  const { requireAdminUnlocked } = await import("./admin-gate.server");
+  await requireAdminUnlocked();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("parts")
@@ -36,6 +38,8 @@ export const setPartStatus = createServerFn({ method: "POST" })
     z.object({ id: z.string(), status: z.enum(["approved", "rejected", "pending"]) }).parse(input),
   )
   .handler(async ({ data }) => {
+    const { requireAdminUnlocked } = await import("./admin-gate.server");
+    await requireAdminUnlocked();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("parts")
@@ -71,6 +75,8 @@ export const updatePart = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
+    const { requireAdminUnlocked } = await import("./admin-gate.server");
+    await requireAdminUnlocked();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { id, ...patch } = data;
     const { error } = await supabaseAdmin.from("parts").update(patch).eq("id", id);
@@ -81,6 +87,8 @@ export const updatePart = createServerFn({ method: "POST" })
 export const deleteParts = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ ids: z.array(z.string()).min(1) }).parse(input))
   .handler(async ({ data }) => {
+    const { requireAdminUnlocked } = await import("./admin-gate.server");
+    await requireAdminUnlocked();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("parts")
