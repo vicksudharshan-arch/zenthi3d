@@ -20,12 +20,12 @@ export const Route = createFileRoute("/upload")({
       {
         name: "description",
         content:
-          "Share an STL or STEP file for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
+          "Share a STEP file for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
       },
       { property: "og:title", content: "Upload a part file — Zenthi" },
       {
         property: "og:description",
-        content: "Contribute an STL or STEP file and the story of how you solved the problem.",
+        content: "Contribute a STEP file and the story of how you solved the problem.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -52,7 +52,6 @@ function UploadPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([emptyVehicle()]);
   const [notes, setNotes] = useState("");
   const [stepFile, setStepFile] = useState<File | null>(null);
-  const [stlFile, setStlFile] = useState<File | null>(null);
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -73,18 +72,13 @@ function UploadPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!licensed) return;
-    if (!stepFile && !stlFile) {
-      toast.error("Attach at least one file — a STEP file, an STL file, or both.");
+    if (!stepFile) {
+      toast.error("Attach a STEP file (.step or .stp).");
       return;
     }
-    const stepExt = stepFile?.name.split(".").pop()?.toLowerCase() ?? "";
-    if (stepFile && !["step", "stp"].includes(stepExt)) {
-      toast.error("The STEP field only accepts .step or .stp files.");
-      return;
-    }
-    const stlExt = stlFile?.name.split(".").pop()?.toLowerCase() ?? "";
-    if (stlFile && stlExt !== "stl") {
-      toast.error("The STL field only accepts .stl files.");
+    const stepExt = stepFile.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!["step", "stp"].includes(stepExt)) {
+      toast.error("Only .step or .stp files are accepted.");
       return;
     }
     const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
@@ -99,8 +93,7 @@ function UploadPage() {
 
     setSubmitting(true);
     try {
-      const stepPath = stepFile ? await uploadFile(stepFile) : null;
-      const stlPath = stlFile ? await uploadFile(stlFile) : null;
+      const stepPath = await uploadFile(stepFile);
 
       const { error } = await supabase.from("parts").insert({
         name: name.trim(),
@@ -114,11 +107,8 @@ function UploadPage() {
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
         step_file_path: stepPath,
-        step_file_name: stepFile?.name ?? null,
-        step_file_size: stepFile?.size ?? null,
-        stl_file_path: stlPath,
-        stl_file_name: stlFile?.name ?? null,
-        stl_file_size: stlFile?.size ?? null,
+        step_file_name: stepFile.name,
+        step_file_size: stepFile.size,
         license_accepted: true,
         status: "pending",
       });
@@ -331,13 +321,9 @@ function UploadPage() {
 
           <fieldset className="space-y-6">
             <legend className="tech-label mb-4 text-brass">03 — Files & writeup</legend>
-            <p className="rounded-sm border border-brass/50 bg-brass/10 p-4 text-sm leading-relaxed">
-              If you only have one format, STEP is more useful to the community — it can be
-              exported to STL, but not the other way around.
-            </p>
             <div>
               <label className={labelCls} htmlFor="stepFile">
-                STEP file (recommended)
+                STEP file (required)
               </label>
               <input
                 id="stepFile"
@@ -350,32 +336,13 @@ function UploadPage() {
                 }
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Editable CAD file. This is what most machine shops need, and lets others modify the
-                design if they need a different fit.
+                STEP file — editable CAD. This is what machine shops need, and lets others modify
+                the design for their own fit.
               </p>
             </div>
-            <div>
-              <label className={labelCls} htmlFor="stlFile">
-                STL file (optional)
-              </label>
-              <input
-                id="stlFile"
-                type="file"
-                accept=".stl,model/stl"
-                onChange={(e) => setStlFile(e.target.files?.[0] ?? null)}
-                className={
-                  fieldCls +
-                  " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground"
-                }
-              />
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Ready-to-print mesh file. Include this too if you have a print-ready version, but
-                note it can't be easily edited.
-              </p>
-            </div>
-            {!stepFile && !stlFile && (
+            {!stepFile && (
               <p className="font-mono text-xs text-muted-foreground">
-                Attach at least one file — STEP, STL, or both.
+                Attach a .step or .stp file to submit.
               </p>
             )}
 
@@ -472,7 +439,7 @@ function UploadPage() {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              disabled={!licensed || submitting || (!stepFile && !stlFile)}
+              disabled={!licensed || submitting || !stepFile}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Uploading…" : "Submit for review"}
