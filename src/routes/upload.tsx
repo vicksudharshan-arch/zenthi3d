@@ -51,7 +51,8 @@ function UploadPage() {
   const [thickness, setThickness] = useState("");
   const [vehicles, setVehicles] = useState<Vehicle[]>([emptyVehicle()]);
   const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [stepFile, setStepFile] = useState<File | null>(null);
+  const [stlFile, setStlFile] = useState<File | null>(null);
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -59,16 +60,31 @@ function UploadPage() {
   const updateVehicle = (i: number, patch: Partial<Vehicle>) =>
     setVehicles((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
+  async function uploadFile(f: File) {
+    const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("part-files").upload(path, f, {
+      contentType: f.type || "application/octet-stream",
+    });
+    if (error) throw error;
+    return path;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!licensed) return;
-    if (!file) {
-      toast.error("Attach an STL or STEP file.");
+    if (!stepFile && !stlFile) {
+      toast.error("Attach at least one file — a STEP file, an STL file, or both.");
       return;
     }
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!["stl", "step", "stp"].includes(ext)) {
-      toast.error("Only STL and STEP files are accepted.");
+    const stepExt = stepFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stepFile && !["step", "stp"].includes(stepExt)) {
+      toast.error("The STEP field only accepts .step or .stp files.");
+      return;
+    }
+    const stlExt = stlFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stlFile && stlExt !== "stl") {
+      toast.error("The STL field only accepts .stl files.");
       return;
     }
     const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
@@ -83,11 +99,8 @@ function UploadPage() {
 
     setSubmitting(true);
     try {
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("part-files").upload(path, file, {
-        contentType: file.type || "application/octet-stream",
-      });
-      if (upErr) throw upErr;
+      const stepPath = stepFile ? await uploadFile(stepFile) : null;
+      const stlPath = stlFile ? await uploadFile(stlFile) : null;
 
       const { error } = await supabase.from("parts").insert({
         name: name.trim(),
@@ -100,9 +113,12 @@ function UploadPage() {
         vehicles: cleanVehicles,
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
-        file_path: path,
-        file_name: file.name,
-        file_size: file.size,
+        step_file_path: stepPath,
+        step_file_name: stepFile?.name ?? null,
+        step_file_size: stepFile?.size ?? null,
+        stl_file_path: stlPath,
+        stl_file_name: stlFile?.name ?? null,
+        stl_file_size: stlFile?.size ?? null,
         license_accepted: true,
         status: "pending",
       });
@@ -115,6 +131,7 @@ function UploadPage() {
       setSubmitting(false);
     }
   }
+
 
   if (done) {
     return (
