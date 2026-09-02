@@ -199,12 +199,20 @@ export const deletePartAsUploader = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error: readErr } = await supabaseAdmin
       .from("parts")
-      .select("uploader_name, file_path")
+      .select("uploader_name, file_path, step_file_path, stl_file_path")
       .eq("id", data.id)
       .maybeSingle();
     if (readErr || !part) throw new Error("Part not found");
     if (!nameMatches(data.uploaderName, part.uploader_name)) return { ok: false as const };
-    if (part.file_path) await supabaseAdmin.storage.from("part-files").remove([part.file_path]);
+    const paths = Array.from(
+      new Set(
+        [part.file_path, part.step_file_path, part.stl_file_path].filter(
+          (p): p is string => !!p,
+        ),
+      ),
+    );
+    if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
+
     const { error } = await supabaseAdmin.from("parts").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
