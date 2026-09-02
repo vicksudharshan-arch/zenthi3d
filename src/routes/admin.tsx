@@ -184,8 +184,24 @@ function AdminPage() {
   return (
     <SiteShell>
       <div className="mx-auto w-full max-w-5xl px-5 py-16">
-        <p className="tech-label">Internal</p>
-        <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">Review queue</h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="tech-label">Internal</p>
+            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">
+              Review queue
+            </h1>
+          </div>
+          <button
+            onClick={async () => {
+              await lockAdmin();
+              qc.invalidateQueries({ queryKey: ["admin", "gate"] });
+            }}
+            className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+          >
+            Lock
+          </button>
+        </div>
+
 
         <div className="mt-8 flex gap-1 border-b border-border">
           {TABS.map((t) => (
