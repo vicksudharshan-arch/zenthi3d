@@ -575,6 +575,22 @@ function LibraryPage() {
                       <ExtraDownloadButtons
                         extras={extras}
                         onDownload={(i) => download(p.id, "extra", i)}
+                        onPreview={(i) =>
+                          setPreview({
+                            part: {
+                              id: p.id,
+                              name: p.name,
+                              step_file_name: p.step_file_name,
+                              stl_file_name: p.stl_file_name,
+                              extra_files: p.extra_files,
+                            },
+                            target: {
+                              format: "extra",
+                              extraIndex: i,
+                              fileName: extras[i]!.name,
+                            },
+                          })
+                        }
                         busyKey={
                           downloading?.startsWith(`${p.id}:extra:`)
                             ? downloading.slice(p.id.length + 1)
