@@ -355,8 +355,8 @@ function UploadPage() {
                 }
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Editable CAD file. This is what most machine shops need, and lets others modify the
-                design if they need a different fit.
+                Editable CAD. This is what most machine shops need, and lets others modify the
+                design for their own fit.
               </p>
             </div>
             <div>
@@ -374,13 +374,13 @@ function UploadPage() {
                 }
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Ready-to-print mesh file, if you have one. Note it can't be easily edited like STEP
-                can.
+                Ready-to-print mesh file. Works if that's all you have, but it can't be easily
+                edited like STEP can.
               </p>
             </div>
-            {!stepFile && (
+            {!stepFile && !stlFile && (
               <p className="font-mono text-xs text-muted-foreground">
-                A STEP file (.step or .stp) is required to submit.
+                Attach at least one file — STEP (.step/.stp) is recommended, STL also accepted.
               </p>
             )}
 
@@ -485,7 +485,7 @@ function UploadPage() {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              disabled={!licensed || submitting || !stepFile}
+              disabled={!licensed || submitting || (!stepFile && !stlFile)}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Uploading…" : "Submit for review"}
