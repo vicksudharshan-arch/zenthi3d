@@ -1,27 +1,74 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getDownloadUrl } from "@/lib/parts.functions";
+import { parseExtraFiles } from "@/lib/parts";
 
 type PreviewPart = {
   id: string;
   name: string;
   step_file_name?: string | null;
   stl_file_name?: string | null;
+  extra_files?: unknown;
 };
+
+export type PreviewTarget =
+  | { format: "step" | "stl" }
+  | { format: "extra"; extraIndex: number; fileName: string };
+
+const MESH_EXTS = ["stl", "obj", "ply"];
+const IMAGE_EXTS = ["svg"];
+const PDF_EXTS = ["pdf"];
+
+function extOf(name: string) {
+  return name.split(".").pop()?.toLowerCase() ?? "";
+}
 
 export function PartPreviewModal({
   part,
+  target,
   onClose,
 }: {
   part: PreviewPart;
+  target?: PreviewTarget | undefined;
   onClose: () => void;
 }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "unsupported" | "error">("loading");
   const [message, setMessage] = useState("");
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
-  const isStl = !!part.stl_file_name;
-  const displayName = part.stl_file_name ?? part.step_file_name ?? "";
+  const resolved = useMemo(() => {
+    const extras = parseExtraFiles(part.extra_files);
+    let t: PreviewTarget | undefined = target;
+    if (!t) {
+      if (part.stl_file_name) t = { format: "stl" };
+      else {
+        const i = extras.findIndex((f) =>
+          [...MESH_EXTS, ...IMAGE_EXTS, ...PDF_EXTS].includes(extOf(f.name)),
+        );
+        t =
+          i >= 0
+            ? { format: "extra", extraIndex: i, fileName: extras[i]!.name }
+            : { format: "step" };
+      }
+    }
+    const fileName =
+      t.format === "extra"
+        ? t.fileName
+        : t.format === "stl"
+          ? (part.stl_file_name ?? "")
+          : (part.step_file_name ?? "");
+    const ext = extOf(fileName);
+    const kind = MESH_EXTS.includes(ext)
+      ? "mesh"
+      : IMAGE_EXTS.includes(ext)
+        ? "image"
+        : PDF_EXTS.includes(ext)
+          ? "pdf"
+          : "none";
+    return { t, fileName, ext, kind } as const;
+  }, [part, target]);
 
+  const { t: activeTarget, fileName: displayName, ext, kind } = resolved;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -32,23 +79,54 @@ export function PartPreviewModal({
   }, [onClose]);
 
   useEffect(() => {
-    if (!isStl) {
+    if (kind === "none") {
       setStatus("unsupported");
       return;
     }
     let disposed = false;
     let cleanup: (() => void) | undefined;
+    let createdUrl: string | null = null;
+
+    const fetchFile = async () => {
+      const { url } = await getDownloadUrl({
+        data:
+          activeTarget.format === "extra"
+            ? { id: part.id, format: "extra", extraIndex: activeTarget.extraIndex }
+            : { id: part.id, format: activeTarget.format },
+      });
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Could not fetch file");
+      return res;
+    };
 
     (async () => {
       try {
-        const [THREE, { STLLoader }, { OrbitControls }] = await Promise.all([
+        if (kind === "image" || kind === "pdf") {
+          const res = await fetchFile();
+          const blob = await res.blob();
+          if (disposed) return;
+          const typed = new Blob([blob], {
+            type: kind === "pdf" ? "application/pdf" : "image/svg+xml",
+          });
+          createdUrl = URL.createObjectURL(typed);
+          setObjectUrl(createdUrl);
+          setStatus("ready");
+          cleanup = () => {
+            if (createdUrl) URL.revokeObjectURL(createdUrl);
+          };
+          return;
+        }
+
+        const [THREE, loaderMod, { OrbitControls }] = await Promise.all([
           import("three"),
-          import("three/examples/jsm/loaders/STLLoader.js"),
+          ext === "stl"
+            ? import("three/examples/jsm/loaders/STLLoader.js")
+            : ext === "obj"
+              ? import("three/examples/jsm/loaders/OBJLoader.js")
+              : import("three/examples/jsm/loaders/PLYLoader.js"),
           import("three/examples/jsm/controls/OrbitControls.js"),
         ]);
-        const { url } = await getDownloadUrl({ data: { id: part.id, format: "stl" } });
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Could not fetch file");
+        const res = await fetchFile();
         const buffer = await res.arrayBuffer();
         if (disposed) return;
         const mount = mountRef.current;
@@ -63,19 +141,44 @@ export function PartPreviewModal({
         renderer.setSize(width, height);
         mount.appendChild(renderer.domElement);
 
-        const geometry = new STLLoader().parse(buffer);
-        geometry.computeVertexNormals();
-        geometry.center();
         const material = new THREE.MeshStandardMaterial({
           color: 0x6f5a86,
           roughness: 0.55,
           metalness: 0.15,
         });
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
+        const disposables: { dispose: () => void }[] = [material];
+        let object: import("three").Object3D;
 
-        geometry.computeBoundingSphere();
-        const radius = geometry.boundingSphere?.radius ?? 50;
+        if (ext === "obj") {
+          const { OBJLoader } = loaderMod as typeof import("three/examples/jsm/loaders/OBJLoader.js");
+          const text = new TextDecoder().decode(buffer);
+          object = new OBJLoader().parse(text);
+          object.traverse((child) => {
+            const mesh = child as import("three").Mesh;
+            if (mesh.isMesh) {
+              mesh.material = material;
+              mesh.geometry.computeVertexNormals();
+              disposables.push(mesh.geometry);
+            }
+          });
+        } else {
+          const Loader =
+            ext === "stl"
+              ? (loaderMod as typeof import("three/examples/jsm/loaders/STLLoader.js")).STLLoader
+              : (loaderMod as typeof import("three/examples/jsm/loaders/PLYLoader.js")).PLYLoader;
+          const geometry = new Loader().parse(buffer as ArrayBuffer);
+          geometry.computeVertexNormals();
+          geometry.center();
+          disposables.push(geometry);
+          object = new THREE.Mesh(geometry, material);
+        }
+
+        scene.add(object);
+
+        const box = new THREE.Box3().setFromObject(object);
+        const sphere = box.getBoundingSphere(new THREE.Sphere());
+        object.position.sub(sphere.center);
+        const radius = sphere.radius || 50;
         camera.position.set(radius * 2, radius * 1.6, radius * 2.2);
         camera.near = radius / 100;
         camera.far = radius * 100;
@@ -113,8 +216,7 @@ export function PartPreviewModal({
           cancelAnimationFrame(frame);
           window.removeEventListener("resize", onResize);
           controls.dispose();
-          geometry.dispose();
-          material.dispose();
+          disposables.forEach((d) => d.dispose());
           renderer.dispose();
           if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
         };
@@ -128,8 +230,9 @@ export function PartPreviewModal({
     return () => {
       disposed = true;
       cleanup?.();
+      setObjectUrl(null);
     };
-  }, [part.id, isStl]);
+  }, [part.id, kind, ext, activeTarget]);
 
   return (
     <div
@@ -156,24 +259,37 @@ export function PartPreviewModal({
           </button>
         </div>
         <div ref={mountRef} className="relative min-h-0 flex-1 bg-secondary/40">
+          {status === "ready" && kind === "image" && objectUrl && (
+            <img
+              src={objectUrl}
+              alt={`Vector preview of ${displayName}`}
+              className="absolute inset-0 size-full object-contain p-8"
+            />
+          )}
+          {status === "ready" && kind === "pdf" && objectUrl && (
+            <iframe
+              src={objectUrl}
+              title={`PDF preview of ${displayName}`}
+              className="absolute inset-0 size-full"
+            />
+          )}
           {status !== "ready" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
               {status === "loading" && (
-                <p className="font-mono text-sm text-muted-foreground">Loading 3D preview…</p>
+                <p className="font-mono text-sm text-muted-foreground">Loading preview…</p>
               )}
               {status === "unsupported" && (
                 <>
                   <span className="rounded-sm border border-brass px-3 py-1 font-mono text-xs tracking-widest text-brass-foreground uppercase">
-                    STEP · editable CAD
+                    {ext ? `${ext.toUpperCase()} · CAD file` : "CAD file"}
                   </span>
                   <p className="font-display text-xl font-semibold">
-                    This part ships as an editable STEP file
+                    This file is best inspected in CAD
                   </p>
                   <p className="max-w-md text-sm text-muted-foreground">
-                    {displayName} — STEP is the preferred format here: it goes straight to a machine
-                    shop and can be modified in any CAD package, or exported to STL for printing. It
-                    just can't be rendered in the browser, so download it to inspect it in CAD or
-                    your slicer.
+                    {displayName || "This format"} can't be rendered in the browser. Formats like
+                    STEP, DWG and native CAD files go straight to a machine shop and can be modified
+                    in any CAD package — download it to inspect it in CAD or your slicer.
                   </p>
                 </>
               )}
@@ -187,10 +303,8 @@ export function PartPreviewModal({
         </div>
         <p className="border-t border-border px-6 py-3 font-mono text-xs text-muted-foreground">
           {displayName}
-          {isStl ? " · drag to rotate, scroll to zoom" : ""}
-          
+          {kind === "mesh" ? " · drag to rotate, scroll to zoom" : ""}
         </p>
-
       </div>
     </div>
   );

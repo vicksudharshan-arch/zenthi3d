@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { SiteShell } from "@/components/site-shell";
-import { PartPreviewModal } from "@/components/part-preview-modal";
+import { PartPreviewModal, type PreviewTarget } from "@/components/part-preview-modal";
 import {
   ExtraDownloadButtons,
   FormatBadges,
@@ -72,7 +72,7 @@ type Part = {
 function PartDetailPage() {
   const { partId } = Route.useParams();
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [preview, setPreview] = useState(false);
+  const [preview, setPreview] = useState<{ open: boolean; target?: PreviewTarget } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["part", partId],
@@ -250,7 +250,7 @@ function PartDetailPage() {
               </p>
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <button
-                  onClick={() => setPreview(true)}
+                  onClick={() => setPreview({ open: true })}
                   className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
                 >
                   Preview
@@ -282,6 +282,12 @@ function PartDetailPage() {
                 <ExtraDownloadButtons
                   extras={extras}
                   onDownload={(i) => download("extra", i)}
+                  onPreview={(i) =>
+                    setPreview({
+                      open: true,
+                      target: { format: "extra", extraIndex: i, fileName: extras[i]!.name },
+                    })
+                  }
                   busyKey={downloading}
                 />
               </div>
@@ -297,8 +303,10 @@ function PartDetailPage() {
             name: data.name,
             step_file_name: data.step_file_name,
             stl_file_name: data.stl_file_name,
+            extra_files: data.extra_files,
           }}
-          onClose={() => setPreview(false)}
+          target={preview.target}
+          onClose={() => setPreview(null)}
         />
       )}
     </SiteShell>

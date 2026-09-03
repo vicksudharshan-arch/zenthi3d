@@ -95,29 +95,45 @@ export function PartNumbers({
   );
 }
 
+const PREVIEWABLE_EXTRAS = ["obj", "ply", "svg", "pdf"];
+
 export function ExtraDownloadButtons({
   extras,
   onDownload,
+  onPreview,
   busyKey,
 }: {
   extras: ExtraFile[];
   onDownload: (index: number) => void;
+  onPreview?: (index: number) => void;
   busyKey: string | null;
 }) {
   return (
     <>
-      {extras.map((f, i) => (
-        <button
-          key={`${f.path}-${i}`}
-          onClick={() => onDownload(i)}
-          disabled={busyKey === `extra:${i}`}
-          title={f.name}
-          className="inline-flex h-9 max-w-[16rem] items-center truncate rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary disabled:opacity-50"
-        >
-          {busyKey === `extra:${i}` ? "Preparing…" : `Download ${f.name}`}
-        </button>
-      ))}
-
+      {extras.map((f, i) => {
+        const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+        return (
+          <span key={`${f.path}-${i}`} className="inline-flex items-center gap-2">
+            {onPreview && PREVIEWABLE_EXTRAS.includes(ext) && (
+              <button
+                onClick={() => onPreview(i)}
+                className="inline-flex h-9 items-center rounded-sm border border-border px-3 text-sm font-medium hover:bg-secondary"
+              >
+                Preview {ext.toUpperCase()}
+              </button>
+            )}
+            <button
+              onClick={() => onDownload(i)}
+              disabled={busyKey === `extra:${i}`}
+              title={f.name}
+              className="inline-flex h-9 max-w-[16rem] items-center truncate rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+            >
+              {busyKey === `extra:${i}` ? "Preparing…" : `Download ${f.name}`}
+            </button>
+          </span>
+        );
+      })}
     </>
   );
 }
+
