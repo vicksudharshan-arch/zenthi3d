@@ -93,13 +93,14 @@ function Index() {
         <div className="rounded-sm border border-border bg-card p-8">
           <p className="tech-label">Scope</p>
           <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
-            Cosmetic and functional, never structural.
+            Shared for reference, not for safety-critical use.
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Zenthi accepts brackets, housings, covers and trim. It does not accept brakes,
-            suspension, structural components or fuel-system parts — printed polymer has no business
-            holding a car together or containing fuel. Submissions in those categories are rejected
-            in review.
+            Zenthi is a community archive of car-part files — brackets, housings, covers, trim,
+            and more. Printed polymer has no business holding a car together or containing fuel, so
+            use of the files is recommended for fitment purposes only. All files are provided for
+            reference only; verify fit, material suitability, and safety independently before any
+            real-world use.
           </p>
         </div>
       </section>
