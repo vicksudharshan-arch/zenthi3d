@@ -48,15 +48,15 @@ function Index() {
         <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:py-32">
           <p className="tech-label">Open archive · Rev. 01</p>
           <h1 className="mt-6 max-w-4xl font-display text-4xl leading-[1.08] font-semibold tracking-tight text-foreground sm:text-6xl">
-            A shared library of rare, hard-to-find, and interesting car parts — for any car.
+            Where car part innovation happens — rare fixes, retrofits, and hard-to-find parts for any car.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Enthusiasts already figure out how to adapt and fabricate rare, hard-to-find parts —
-            measuring the broken bracket, modelling it at 2am, printing five revisions until it clicks
-            in. High-performance and exotic builds are a common use case, but they're not the
-            boundary: a retrofit that improves a Honda Civic is just as welcome as a fix for a
-            Lamborghini. Zenthi is a place to share those solved problems, instead of losing them in
-            old forum threads.
+            The hardest, most inventive fixes usually come from high-performance and exotic builds
+            pushing into territory nobody else supports — measuring the broken bracket, modelling it
+            at 2am, printing five revisions until it clicks in. That same spirit applies to any car
+            with a rare problem to solve: a retrofit that improves a Honda Civic is just as welcome
+            as a fix for a Lamborghini. Zenthi is the archive for those solved problems, instead of
+            losing them in old forum threads.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
@@ -98,12 +98,13 @@ function Index() {
             Shared for reference, not for safety-critical use.
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Zenthi is a community archive of car-part files — brackets, housings, covers, trim, and
-            more. It is open to parts for any vehicle, from mainstream daily drivers to
-            high-performance and exotic builds. Printed polymer has no business holding a car
-            together or containing fuel, so use of the files is recommended for fitment purposes only.
-            All files are provided for reference only; verify fit, material suitability, and safety
-            independently before any real-world use.
+            Zenthi is an innovation archive for car-part files — brackets, housings, covers, trim,
+            and more. The hardest, most inventive work often starts with high-performance and exotic
+            builds, but that spirit extends to any vehicle: mainstream daily drivers, retrofits, and
+            performance mods are welcome here. Printed polymer has no business holding a car together
+            or containing fuel, so use of the files is recommended for fitment purposes only. All files
+            are provided for reference only; verify fit, material suitability, and safety independently
+            before any real-world use.
           </p>
         </div>
       </section>
