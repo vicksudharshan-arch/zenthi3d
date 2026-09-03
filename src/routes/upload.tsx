@@ -12,14 +12,11 @@ import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
-  EXTRA_FILE_KINDS,
-  EXTRA_FILE_META,
   SAFETY_SENSITIVE_CATEGORIES,
   emptyVehicle,
   type AftermarketPartNumber,
   type Category,
   type ContributorType,
-  type ExtraFileKind,
   type Vehicle,
 } from "@/lib/parts";
 
@@ -71,7 +68,7 @@ function UploadPage() {
   const [notes, setNotes] = useState("");
   const [stepFile, setStepFile] = useState<File | null>(null);
   const [stlFile, setStlFile] = useState<File | null>(null);
-  const [extraFiles, setExtraFiles] = useState<Partial<Record<ExtraFileKind, File | null>>>({});
+  const [extraFiles, setExtraFiles] = useState<File[]>([]);
   const [origin, setOrigin] = useState<Origin>("zenthi");
   const [sourceLink, setSourceLink] = useState("");
   const [licenseType, setLicenseType] = useState("");
@@ -81,10 +78,7 @@ function UploadPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
-  const chosenExtras = EXTRA_FILE_KINDS.map((k) => [k, extraFiles[k] ?? null] as const).filter(
-    (e): e is readonly [ExtraFileKind, File] => !!e[1],
-  );
-  const hasAnyFile = !!stepFile || !!stlFile || chosenExtras.length > 0;
+  const hasAnyFile = !!stepFile || !!stlFile || extraFiles.length > 0;
   const encourageReference = SAFETY_SENSITIVE_CATEGORIES.includes(category);
 
   async function uploadFile(f: File) {
@@ -112,12 +106,6 @@ function UploadPage() {
     if (stlFile && stlFile.name.split(".").pop()?.toLowerCase() !== "stl") {
       toast.error("The STL field only accepts .stl files.");
       return;
-    }
-    for (const [kind, file] of chosenExtras) {
-      if (file.name.split(".").pop()?.toLowerCase() !== kind) {
-        toast.error(`The ${kind.toUpperCase()} field only accepts .${kind} files.`);
-        return;
-      }
     }
     const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
     if (cleanVehicles.length === 0) {
@@ -155,7 +143,8 @@ function UploadPage() {
       const stepPath = stepFile ? await uploadFile(stepFile) : null;
       const stlPath = stlFile ? await uploadFile(stlFile) : null;
       const extras = [];
-      for (const [kind, file] of chosenExtras) {
+      for (const file of extraFiles) {
+        const kind = file.name.split(".").pop()?.toLowerCase() ?? "file";
         extras.push({ kind, path: await uploadFile(file), name: file.name, size: file.size });
       }
 
@@ -541,35 +530,59 @@ function UploadPage() {
               </p>
             </div>
 
-            <div className="space-y-6 rounded-sm border border-border bg-secondary/50 p-4">
-              <p className="tech-label">
-                Scans, cutting files &amp; drawings — attach whichever you have
-              </p>
-              {EXTRA_FILE_KINDS.map((kind) => (
-                <div key={kind}>
-                  <label className={labelCls} htmlFor={`file-${kind}`}>
-                    {EXTRA_FILE_META[kind].label}
-                  </label>
-                  <input
-                    id={`file-${kind}`}
-                    type="file"
-                    accept={EXTRA_FILE_META[kind].accept}
-                    onChange={(e) =>
-                      setExtraFiles((s) => ({ ...s, [kind]: e.target.files?.[0] ?? null }))
-                    }
-                    className={fileCls}
-                  />
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    {EXTRA_FILE_META[kind].helper}
-                  </p>
-                </div>
-              ))}
+            <div className="space-y-4 rounded-sm border border-border bg-secondary/50 p-4">
+              <div>
+                <label className={labelCls} htmlFor="extraFiles">
+                  Additional files (optional)
+                </label>
+                <input
+                  id="extraFiles"
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    const picked = Array.from(e.target.files ?? []);
+                    setExtraFiles((s) => [
+                      ...s,
+                      ...picked.filter((f) => !s.some((x) => x.name === f.name && x.size === f.size)),
+                    ]);
+                    e.target.value = "";
+                  }}
+                  className={fileCls}
+                />
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  Native CAD (Rhino .3dm, SolidWorks, Fusion 360), 3D scans (OBJ/PLY), cutting
+                  files (DXF/SVG) or drawings (PDF/DWG) — anything else that helps with this part.
+                  Select several at once.
+                </p>
+              </div>
+              {extraFiles.length > 0 && (
+                <ul className="space-y-2">
+                  {extraFiles.map((f, i) => (
+                    <li
+                      key={`${f.name}-${f.size}-${i}`}
+                      className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background px-3 py-2"
+                    >
+                      <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
+                      <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
+                        {(f.size / 1024).toFixed(0)} KB
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setExtraFiles((s) => s.filter((_, idx) => idx !== i))}
+                        className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {!hasAnyFile && (
               <p className="font-mono text-xs text-muted-foreground">
-                Attach at least one file — STEP (.step/.stp) is recommended; STL, OBJ, PLY, DXF,
-                SVG, PDF and DWG are also accepted.
+                Attach at least one file — STEP (.step/.stp) is recommended; STL and any
+                additional CAD, scan, cutting or drawing files are also accepted.
               </p>
             )}
 
