@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import {
+  AftermarketNumberFields,
+  VehicleFitmentFields,
+} from "@/components/vehicle-fitment-fields";
+import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
+  emptyVehicle,
+  type AftermarketPartNumber,
   type Vehicle,
 } from "@/lib/parts";
 import {
@@ -18,11 +24,14 @@ export type EditablePart = {
   name: string;
   description: string;
   category: string;
+  reference_only: boolean;
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
   contributor_type: string[];
   vehicles: Vehicle[];
+  oem_part_numbers: string | null;
+  aftermarket_part_numbers: AftermarketPartNumber[];
   notes: string | null;
   uploader_name: string | null;
 };
