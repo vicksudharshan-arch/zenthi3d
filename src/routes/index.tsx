@@ -32,7 +32,7 @@ const STEPS = [
   {
     no: "02",
     title: "It gets shared here",
-    body: "STEP is recommended — editable CAD goes straight to a machine shop or gets modified for a different fit. An STL works too if that's all you have, plus fitment details and the writeup.",
+    body: "Upload a CAD model, 3D scan, cutting profile, or 2D drawing — STEP is recommended for edits, but the archive accepts multiple formats. Add fitment details and a writeup so the next person knows exactly what they're looking at.",
   },
   {
     no: "03",
