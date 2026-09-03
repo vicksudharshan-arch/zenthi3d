@@ -79,17 +79,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Zenthi — Build What Doesn't Exist." },
+      { title: "Zenthi — Can't find it anywhere? Someone already fixed it." },
       {
         name: "description",
         content:
-          "A carefully kept archive of rare, hard-to-find, and interesting car-part files for any car.",
+          "Community-shared car-part files for the stuff nobody else bothers making. Mods, retrofits, upgrades, and everyday fixes — from a Bronco to a Lamborghini.",
       },
-      { property: "og:title", content: "Zenthi — Build What Doesn't Exist." },
+      { property: "og:title", content: "Zenthi — Can't find it anywhere? Someone already fixed it." },
       {
         property: "og:description",
         content:
-          "Community-shared CAD, scan, and cutting files for rare, hard-to-find car parts.",
+          "Community-shared car-part files for the stuff nobody else bothers making. Mods, retrofits, upgrades, and everyday fixes — from a Bronco to a Lamborghini.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
