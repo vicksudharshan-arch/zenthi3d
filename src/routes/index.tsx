@@ -75,7 +75,7 @@ function Index() {
             </Link>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
-            HONDA · BMW · PORSCHE · MAZDA · TOYOTA · FERRARI · AND MORE
+            BMW · PORSCHE · MAZDA · TOYOTA · FERRARI · AND MORE
           </p>
         </div>
       </section>
@@ -111,7 +111,7 @@ function Index() {
             <p className="text-xs leading-relaxed text-muted-foreground">
               <span className="font-medium text-foreground">A note on brand coverage:</span>{" "}
               Honda/Acura and Stellantis-brand vehicles (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa
-              Romeo, Maserati, Peugeot, Citroën, Opel, Vauxhall, Lancia) currently aren't supported.
+              Romeo, Peugeot, Citroën, Opel, Vauxhall, Lancia) currently aren't supported.
               These manufacturers have a documented history of aggressive legal takedown action
               against community fitment files, even ones with no logo or trademark use — we'd rather
               not put contributors at risk.
