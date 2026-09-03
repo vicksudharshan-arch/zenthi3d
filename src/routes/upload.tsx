@@ -182,6 +182,8 @@ function UploadPage() {
         extra_files: extras,
         source_link: origin === "external" ? sourceLink.trim() : null,
         license_type: origin === "external" ? licenseType : "CC BY",
+        original_creator: origin === "external" ? originalCreator.trim() : null,
+
         license_accepted: true,
         status: "pending",
       });
