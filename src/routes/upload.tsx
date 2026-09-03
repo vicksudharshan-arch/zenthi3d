@@ -73,12 +73,12 @@ function UploadPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!licensed) return;
-    if (!stepFile) {
-      toast.error("A STEP file is required (.step or .stp).");
+    if (!stepFile && !stlFile) {
+      toast.error("Provide at least one file — STEP is recommended, STL works too.");
       return;
     }
-    const stepExt = stepFile.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!["step", "stp"].includes(stepExt)) {
+    const stepExt = stepFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stepFile && !["step", "stp"].includes(stepExt)) {
       toast.error("The STEP field only accepts .step or .stp files.");
       return;
     }
@@ -99,7 +99,7 @@ function UploadPage() {
 
     setSubmitting(true);
     try {
-      const stepPath = await uploadFile(stepFile);
+      const stepPath = stepFile ? await uploadFile(stepFile) : null;
       const stlPath = stlFile ? await uploadFile(stlFile) : null;
 
       const { error } = await supabase.from("parts").insert({
