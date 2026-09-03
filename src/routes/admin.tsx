@@ -4,10 +4,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import {
+  AftermarketNumberFields,
+  VehicleFitmentFields,
+} from "@/components/vehicle-fitment-fields";
+import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
+  emptyVehicle,
+  parseAftermarket,
+  vehicleDetailLabel,
   vehicleLabel,
   type Category,
   type Vehicle,
