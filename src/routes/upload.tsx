@@ -53,6 +53,8 @@ function UploadPage() {
   const [notes, setNotes] = useState("");
   const [stepFile, setStepFile] = useState<File | null>(null);
   const [stlFile, setStlFile] = useState<File | null>(null);
+  const [sourceLink, setSourceLink] = useState("");
+  const [licenseType, setLicenseType] = useState("");
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -96,6 +98,18 @@ function UploadPage() {
       toast.error("Select at least one contributor tag — what best describes you.");
       return;
     }
+    if (sourceLink.trim()) {
+      try {
+        new URL(sourceLink.trim());
+      } catch {
+        toast.error("The source link doesn't look like a valid URL.");
+        return;
+      }
+      if (!licenseType) {
+        toast.error("License type is required when the file came from another site.");
+        return;
+      }
+    }
 
     setSubmitting(true);
     try {
@@ -119,6 +133,8 @@ function UploadPage() {
         stl_file_path: stlPath,
         stl_file_name: stlFile?.name ?? null,
         stl_file_size: stlFile?.size ?? null,
+        source_link: sourceLink.trim() || null,
+        license_type: licenseType || null,
         license_accepted: true,
         status: "pending",
       });
@@ -383,6 +399,48 @@ function UploadPage() {
                 Attach at least one file — STEP (.step/.stp) is recommended, STL also accepted.
               </p>
             )}
+
+            <div className="grid gap-6 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-2">
+              <div>
+                <label className={labelCls} htmlFor="sourceLink">
+                  Source link (if from another site)
+                </label>
+                <input
+                  id="sourceLink"
+                  type="url"
+                  value={sourceLink}
+                  onChange={(e) => setSourceLink(e.target.value)}
+                  placeholder="https://www.thingiverse.com/thing:…"
+                  className={fieldCls}
+                />
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  If this file originally came from somewhere else (Thingiverse, Printables, etc.),
+                  link to the original listing here.
+                </p>
+              </div>
+              <div>
+                <label className={labelCls} htmlFor="licenseType">
+                  License type
+                </label>
+                <select
+                  id="licenseType"
+                  value={licenseType}
+                  onChange={(e) => setLicenseType(e.target.value)}
+                  className={fieldCls}
+                >
+                  <option value="">—</option>
+                  <option value="CC0">CC0</option>
+                  <option value="CC-BY-4.0">CC-BY-4.0</option>
+                  <option value="CC-BY-SA-4.0">CC-BY-SA-4.0</option>
+                  <option value="CC-BY-NC-4.0">CC-BY-NC-4.0</option>
+                  <option value="Other / describe in notes">Other / describe in notes</option>
+                </select>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  e.g. CC0, CC-BY-4.0, CC-BY-SA-4.0 — required if this came from another site under
+                  a specific license.
+                </p>
+              </div>
+            </div>
 
             <div>
               <label className={labelCls} htmlFor="notes">
