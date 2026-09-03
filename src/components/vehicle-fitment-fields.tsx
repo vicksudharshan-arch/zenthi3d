@@ -1,8 +1,18 @@
-import { DRIVETRAINS, emptyVehicle, type Vehicle } from "@/lib/parts";
+import {
+  DRIVETRAINS,
+  RESTRICTED_MAKE_MESSAGE,
+  emptyVehicle,
+  isRestrictedMake,
+  type Vehicle,
+} from "@/lib/parts";
+import type { ReactNode } from "react";
 
 const labelCls = "tech-label block";
 const fieldCls =
   "mt-2 w-full rounded-sm border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/25";
+const errorCls = "border-destructive focus:border-destructive focus:ring-destructive/25";
+const helperCls = "mt-2 text-xs leading-relaxed text-muted-foreground";
+const errorTextCls = "mt-2 text-xs leading-relaxed text-destructive";
 
 /**
  * Shared fitment editor used by the public upload form, the uploader edit
@@ -12,11 +22,16 @@ export function VehicleFitmentFields({
   vehicles,
   onChange,
   idPrefix = "fitment",
+  makeHelperText,
+  validateMakes = false,
 }: {
   vehicles: Vehicle[];
   onChange: (next: Vehicle[]) => void;
   idPrefix?: string;
+  makeHelperText?: ReactNode;
+  validateMakes?: boolean;
 }) {
+
   const update = (i: number, patch: Partial<Vehicle>) =>
     onChange(vehicles.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
