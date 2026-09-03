@@ -20,7 +20,7 @@ export const Route = createFileRoute("/upload")({
       {
         name: "description",
         content:
-          "Share a STEP file (and optionally an STL) for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
+          "Share a STEP file (recommended) or an STL for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
       },
       { property: "og:title", content: "Upload a part file — Zenthi" },
       {

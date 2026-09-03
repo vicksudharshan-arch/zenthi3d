@@ -32,7 +32,7 @@ const STEPS = [
   {
     no: "02",
     title: "It gets shared here",
-    body: "A STEP file is required — editable CAD goes straight to a machine shop or gets modified for a different fit. Add an STL too if you have a print-ready one, plus fitment details and the writeup.",
+    body: "STEP is recommended — editable CAD goes straight to a machine shop or gets modified for a different fit. An STL works too if that's all you have, plus fitment details and the writeup.",
   },
   {
     no: "03",
