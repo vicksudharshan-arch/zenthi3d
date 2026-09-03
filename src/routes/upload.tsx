@@ -473,7 +473,14 @@ function UploadPage() {
               Engine and drivetrain details are optional, but they matter a lot for swapped project
               cars where make, model and year alone aren't specific enough.
             </p>
-            <VehicleFitmentFields vehicles={vehicles} onChange={setVehicles} idPrefix="upload" />
+            <VehicleFitmentFields
+              vehicles={vehicles}
+              onChange={setVehicles}
+              idPrefix="upload"
+              makeHelperText="Honda/Acura and Stellantis-brand vehicles aren't currently supported — see homepage for why."
+              validateMakes
+            />
+
           </fieldset>
 
           <fieldset className="space-y-6">
