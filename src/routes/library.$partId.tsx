@@ -171,6 +171,10 @@ function PartDetailPage() {
                   </li>
                 ))}
               </ul>
+              <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                Brand names are used for fitment reference only — not an official or endorsed
+                product.
+              </p>
             </div>
 
             <div className="mt-6">
