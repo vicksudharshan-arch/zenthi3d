@@ -86,6 +86,7 @@ export type Database = {
           name: string
           notes: string | null
           oem_part_numbers: string | null
+          original_creator: string | null
           placement: string | null
           reference_only: boolean
           source_link: string | null
@@ -115,6 +116,7 @@ export type Database = {
           name: string
           notes?: string | null
           oem_part_numbers?: string | null
+          original_creator?: string | null
           placement?: string | null
           reference_only?: boolean
           source_link?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           name?: string
           notes?: string | null
           oem_part_numbers?: string | null
+          original_creator?: string | null
           placement?: string | null
           reference_only?: boolean
           source_link?: string | null

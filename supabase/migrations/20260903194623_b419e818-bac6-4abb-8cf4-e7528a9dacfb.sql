@@ -1,0 +1,1 @@
+ALTER TABLE public.parts ADD COLUMN original_creator text;
