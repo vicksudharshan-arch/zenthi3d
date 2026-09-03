@@ -54,10 +54,10 @@ function Index() {
             Where car part innovation happens — rare fixes, retrofits, and hard-to-find parts for
             any car. The hardest, most inventive fixes usually come from high-performance and exotic
             builds pushing into territory nobody else supports — measuring the broken bracket,
-            modelling it at 2am, printing five revisions until it clicks in. That same energy works
-            just as well for the small stuff: a discontinued washer fluid splitter or a clip you can't
-            find anywhere is just as welcome as a Lamborghini retrofit. Zenthi is where those fixes
-            live instead of disappearing into old forum threads.
+            modelling it at 2am, printing five revisions until it clicks in. Zenthi is just as much
+            for the small stuff: a discontinued washer fluid splitter or a clip you can't find
+            anywhere is just as welcome as a Lamborghini retrofit. This is where those fixes live
+            instead of disappearing into old forum threads.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
