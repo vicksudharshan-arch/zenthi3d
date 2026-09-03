@@ -20,7 +20,7 @@ export const Route = createFileRoute("/upload")({
       {
         name: "description",
         content:
-          "Share a STEP file (and optionally an STL) for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
+          "Share a STEP file (recommended) or an STL for a rare, non-safety-critical car part, with fitment details and your writeup on how you solved it.",
       },
       { property: "og:title", content: "Upload a part file — Zenthi" },
       {
@@ -73,12 +73,12 @@ function UploadPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!licensed) return;
-    if (!stepFile) {
-      toast.error("A STEP file is required (.step or .stp).");
+    if (!stepFile && !stlFile) {
+      toast.error("Provide at least one file — STEP is recommended, STL works too.");
       return;
     }
-    const stepExt = stepFile.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!["step", "stp"].includes(stepExt)) {
+    const stepExt = stepFile?.name.split(".").pop()?.toLowerCase() ?? "";
+    if (stepFile && !["step", "stp"].includes(stepExt)) {
       toast.error("The STEP field only accepts .step or .stp files.");
       return;
     }
@@ -99,7 +99,7 @@ function UploadPage() {
 
     setSubmitting(true);
     try {
-      const stepPath = await uploadFile(stepFile);
+      const stepPath = stepFile ? await uploadFile(stepFile) : null;
       const stlPath = stlFile ? await uploadFile(stlFile) : null;
 
       const { error } = await supabase.from("parts").insert({
@@ -114,8 +114,8 @@ function UploadPage() {
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
         step_file_path: stepPath,
-        step_file_name: stepFile.name,
-        step_file_size: stepFile.size,
+        step_file_name: stepFile?.name ?? null,
+        step_file_size: stepFile?.size ?? null,
         stl_file_path: stlPath,
         stl_file_name: stlFile?.name ?? null,
         stl_file_size: stlFile?.size ?? null,
@@ -336,9 +336,13 @@ function UploadPage() {
 
           <fieldset className="space-y-6">
             <legend className="tech-label mb-4 text-brass">03 — Files & writeup</legend>
+            <p className="font-mono text-xs leading-relaxed text-muted-foreground">
+              STEP is more useful to the community when you have it — it can be exported to STL,
+              but not the other way around. Provide at least one file to submit.
+            </p>
             <div>
               <label className={labelCls} htmlFor="stepFile">
-                STEP file (required)
+                STEP file (recommended)
               </label>
               <input
                 id="stepFile"
@@ -351,8 +355,8 @@ function UploadPage() {
                 }
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Editable CAD file. This is what most machine shops need, and lets others modify the
-                design if they need a different fit.
+                Editable CAD. This is what most machine shops need, and lets others modify the
+                design for their own fit.
               </p>
             </div>
             <div>
@@ -370,13 +374,13 @@ function UploadPage() {
                 }
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Ready-to-print mesh file, if you have one. Note it can't be easily edited like STEP
-                can.
+                Ready-to-print mesh file. Works if that's all you have, but it can't be easily
+                edited like STEP can.
               </p>
             </div>
-            {!stepFile && (
+            {!stepFile && !stlFile && (
               <p className="font-mono text-xs text-muted-foreground">
-                A STEP file (.step or .stp) is required to submit.
+                Attach at least one file — STEP (.step/.stp) is recommended, STL also accepted.
               </p>
             )}
 
@@ -481,7 +485,7 @@ function UploadPage() {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              disabled={!licensed || submitting || !stepFile}
+              disabled={!licensed || submitting || (!stepFile && !stlFile)}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Uploading…" : "Submit for review"}
