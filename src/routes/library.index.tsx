@@ -380,7 +380,7 @@ function LibraryPage() {
                         rel="noopener noreferrer"
                         className="underline decoration-dotted underline-offset-2 hover:text-primary"
                       >
-                        Sourced from original listing ↗
+                        Originally from: source listing ↗
                       </a>
                     )}
                     {p.license_type && (

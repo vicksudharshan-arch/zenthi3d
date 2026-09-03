@@ -208,7 +208,7 @@ function PartDetailPage() {
                     rel="noopener noreferrer"
                     className="underline decoration-dotted underline-offset-2 hover:text-primary"
                   >
-                    Sourced from original listing ↗
+                    Originally from: source listing ↗
                   </a>
                 )}
                 {data.license_type && (
