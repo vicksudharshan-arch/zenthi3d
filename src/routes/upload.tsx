@@ -575,16 +575,20 @@ function UploadPage() {
 
             <div>
               <label className={labelCls} htmlFor="notes">
-                How you solved it (optional)
+                Notes (optional)
               </label>
               <textarea
                 id="notes"
                 rows={6}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Print settings, material, tolerances, how you measured the original, what failed on revision one…"
+                placeholder="How you solved it, print settings, tips for getting it to fit — anything useful for the next person."
                 className={fieldCls}
               />
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                How you solved it, print settings, tips for getting it to fit — anything useful for
+                the next person.
+              </p>
             </div>
             <div>
               <label className={labelCls} htmlFor="uploader">
