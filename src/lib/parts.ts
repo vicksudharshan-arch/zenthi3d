@@ -72,6 +72,7 @@ export const RESTRICTED_MAKES = [
   "Ram",
   "Fiat",
   "Alfa Romeo",
+  "Maserati",
   "Peugeot",
   "Citroën",
   "Citroen",
@@ -84,7 +85,7 @@ export const RESTRICTED_MAKES = [
 ] as const;
 
 export const RESTRICTED_MAKE_MESSAGE =
-  "Honda/Acura and Stellantis-brand vehicles (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa Romeo, Peugeot, Citroën, Opel, Vauxhall, Lancia, Abarth) aren't currently supported due to aggressive brand enforcement against community fitment files.";
+  "Honda/Acura and Stellantis-brand vehicles (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa Romeo, Maserati, Peugeot, Citroën, Opel, Vauxhall, Lancia, Abarth) aren't currently supported due to aggressive brand enforcement against community fitment files.";
 
 export function normalizeMake(make: string) {
   return make
