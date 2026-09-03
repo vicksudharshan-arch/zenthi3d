@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
+import { FormatBadges, PartNumbers, ReferenceOnlyBadge } from "@/components/part-meta";
 import {
   AftermarketNumberFields,
   VehicleFitmentFields,
