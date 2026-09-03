@@ -111,11 +111,13 @@ export function ExtraDownloadButtons({
           key={`${f.path}-${i}`}
           onClick={() => onDownload(i)}
           disabled={busyKey === `extra:${i}`}
-          className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+          title={f.name}
+          className="inline-flex h-9 max-w-[16rem] items-center truncate rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary disabled:opacity-50"
         >
-          {busyKey === `extra:${i}` ? "Preparing…" : `Download ${f.kind.toUpperCase()}`}
+          {busyKey === `extra:${i}` ? "Preparing…" : `Download ${f.name}`}
         </button>
       ))}
+
     </>
   );
 }
