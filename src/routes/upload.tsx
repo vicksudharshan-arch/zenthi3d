@@ -124,7 +124,7 @@ function UploadPage() {
       toast.error("Add at least one vehicle this part fits.");
       return;
     }
-    if (contributorTypes.length === 0) {
+    if (origin === "zenthi" && contributorTypes.length === 0) {
       toast.error("Select at least one contributor tag — what best describes you.");
       return;
     }
@@ -143,7 +143,12 @@ function UploadPage() {
         toast.error("Select the license type of the original source file.");
         return;
       }
+      if (!originalCreator.trim()) {
+        toast.error("Add the original creator's name, or type 'Unknown'.");
+        return;
+      }
     }
+
 
     setSubmitting(true);
     try {
