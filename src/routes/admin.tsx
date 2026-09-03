@@ -435,16 +435,23 @@ function EditDialog({
   const [name, setName] = useState(part.name);
   const [description, setDescription] = useState(part.description ?? "");
   const [category, setCategory] = useState(part.category);
+  const [referenceOnly, setReferenceOnly] = useState(!!part.reference_only);
   const [placement, setPlacement] = useState(part.placement ?? "");
   const [material, setMaterial] = useState(part.material ?? "");
   const [thickness, setThickness] = useState(part.thickness_infill ?? "");
+  const [oemNumbers, setOemNumbers] = useState(part.oem_part_numbers ?? "");
+  const [aftermarket, setAftermarket] = useState(
+    parseAftermarket(part.aftermarket_part_numbers).length
+      ? parseAftermarket(part.aftermarket_part_numbers)
+      : [{ brand: "", number: "" }],
+  );
   const [uploader, setUploader] = useState(part.uploader_name ?? "");
   const [notes, setNotes] = useState(part.notes ?? "");
   const [types, setTypes] = useState<string[]>(
     Array.isArray(part.contributor_type) ? part.contributor_type : [],
   );
   const [vehicles, setVehicles] = useState<Vehicle[]>(
-    part.vehicles.length ? part.vehicles : [{ make: "", model: "", yearFrom: "", yearTo: "" }],
+    part.vehicles.length ? part.vehicles : [emptyVehicle()],
   );
 
   const save = useMutation({
@@ -455,11 +462,14 @@ function EditDialog({
           name: name.trim(),
           description: description.trim(),
           category,
+          reference_only: referenceOnly,
           placement: placement.trim() || null,
           material: material.trim() || null,
           thickness_infill: thickness.trim() || null,
           contributor_type: types,
           vehicles: vehicles.filter((v) => v.make.trim() || v.model.trim()),
+          oem_part_numbers: oemNumbers.trim() || null,
+          aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
           notes: notes.trim() || null,
           uploader_name: uploader.trim() || null,
         },
@@ -471,8 +481,6 @@ function EditDialog({
     onError: () => toast.error("Could not save changes."),
   });
 
-  const updateVehicle = (i: number, patch: Partial<Vehicle>) =>
-    setVehicles((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
   return (
     <div
