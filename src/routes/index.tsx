@@ -4,17 +4,17 @@ import { SiteShell } from "@/components/site-shell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zenthi — 3D-printable parts for rare, hard-to-find, and interesting cars" },
+      { title: "Zenthi — Where car part innovation happens" },
       {
         name: "description",
         content:
-          "A free community library of 3D-printable brackets, housings, covers, and trim for any car — from mainstream retrofits to high-performance and exotic builds. Share the fix instead of losing it in a forum thread.",
+          "An open innovation archive of rare, hard-to-find, and interesting car-part files. From high-performance and exotic builds to everyday retrofits, share the fix instead of losing it in a forum thread.",
       },
-      { property: "og:title", content: "Zenthi — a shared library of 3D-printable car parts" },
+      { property: "og:title", content: "Zenthi — Where car part innovation happens" },
       {
         property: "og:description",
         content:
-          "Community-shared CAD, scan, and cutting files for rare, non-safety-critical car parts. Browse the library or upload your own fix.",
+          "Community-shared CAD, scan, and cutting files for rare, hard-to-find car parts. High-performance and exotic builds give the archive its spirit; any car with a clever retrofit is welcome.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
