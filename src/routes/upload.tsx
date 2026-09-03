@@ -75,6 +75,8 @@ function UploadPage() {
   const [origin, setOrigin] = useState<Origin>("zenthi");
   const [sourceLink, setSourceLink] = useState("");
   const [licenseType, setLicenseType] = useState("");
+  const [originalCreator, setOriginalCreator] = useState("");
+
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
