@@ -99,19 +99,24 @@ export function UploaderEditDialog({
   const [name, setName] = useState(part.name);
   const [description, setDescription] = useState(part.description ?? "");
   const [category, setCategory] = useState(part.category);
+  const [referenceOnly, setReferenceOnly] = useState(!!part.reference_only);
   const [placement, setPlacement] = useState(part.placement ?? "");
   const [material, setMaterial] = useState(part.material ?? "");
   const [thickness, setThickness] = useState(part.thickness_infill ?? "");
+  const [oemNumbers, setOemNumbers] = useState(part.oem_part_numbers ?? "");
+  const [aftermarket, setAftermarket] = useState<AftermarketPartNumber[]>(
+    part.aftermarket_part_numbers?.length
+      ? part.aftermarket_part_numbers
+      : [{ brand: "", number: "" }],
+  );
   const [notes, setNotes] = useState(part.notes ?? "");
   const [types, setTypes] = useState<string[]>(
     Array.isArray(part.contributor_type) ? part.contributor_type : [],
   );
   const [vehicles, setVehicles] = useState<Vehicle[]>(
-    part.vehicles.length ? part.vehicles : [{ make: "", model: "", yearFrom: "", yearTo: "" }],
+    part.vehicles.length ? part.vehicles : [emptyVehicle()],
   );
 
-  const updateVehicle = (i: number, patch: Partial<Vehicle>) =>
-    setVehicles((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
   async function check(e: React.FormEvent) {
     e.preventDefault();
