@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "A free community library of 3D-printable brackets, housings, covers, and trim for rare, hard-to-find, or interesting car parts.",
+          "A free community library of 3D-printable brackets, housings, covers, and trim for any car — from mainstream retrofits to high-performance and exotic builds.",
       },
       { property: "og:title", content: "Zenthi" },
       {
