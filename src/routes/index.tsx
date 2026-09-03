@@ -4,17 +4,17 @@ import { SiteShell } from "@/components/site-shell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zenthi — Can't find it anywhere? Someone already fixed it." },
+      { title: "Zenthi — Rare parts. Real fixes." },
       {
         name: "description",
         content:
-          "Community-shared car-part files for the stuff nobody else bothers making. Mods, retrofits, upgrades, and everyday fixes — from a Bronco to a Lamborghini.",
+          "Where car part innovation happens — rare fixes, retrofits, and hard-to-find parts for any car, from high-performance builds to everyday discontinued bits.",
       },
-      { property: "og:title", content: "Zenthi — Can't find it anywhere? Someone already fixed it." },
+      { property: "og:title", content: "Zenthi — Rare parts. Real fixes." },
       {
         property: "og:description",
         content:
-          "Community-shared car-part files for the stuff nobody else bothers making. Mods, retrofits, upgrades, and everyday fixes — from a Bronco to a Lamborghini.",
+          "Where car part innovation happens — rare fixes, retrofits, and hard-to-find parts for any car, from high-performance builds to everyday discontinued bits.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -48,15 +48,16 @@ function Index() {
         <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:py-32">
           <p className="tech-label">Open library · Rev. 01</p>
           <h1 className="mt-6 max-w-4xl font-display text-4xl leading-[1.08] font-semibold tracking-tight text-foreground sm:text-6xl">
-            Can't find it anywhere? Someone already fixed it.
+            Rare parts. Real fixes.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Somebody's already fixed this. Your washer fluid splitter is broken, the bracket
-            snapped, or a part just doesn't exist anymore — and buying new from the dealer isn't an
-            option. Chances are someone's already solved it: measured it, modeled it, printed a few
-            revisions until it fit. Mods, upgrades, retrofits, and everyday fixes are all welcome
-            here, whether it's for a Bronco or a Lamborghini. Zenthi is where those fixes live instead
-            of disappearing into old forum threads.
+            Where car part innovation happens — rare fixes, retrofits, and hard-to-find parts for
+            any car. The hardest, most inventive fixes usually come from high-performance and exotic
+            builds pushing into territory nobody else supports — measuring the broken bracket,
+            modelling it at 2am, printing five revisions until it clicks in. It's not just the big
+            stuff either: a broken washer fluid splitter or a discontinued clip belongs here just as
+            much as a Lamborghini retrofit. Zenthi is where those fixes live instead of disappearing
+            into old forum threads.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
