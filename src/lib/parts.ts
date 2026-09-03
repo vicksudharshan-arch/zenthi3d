@@ -61,6 +61,47 @@ export const CONTRIBUTOR_TYPE_LABELS: Record<ContributorType, string> = {
 
 export const DRIVETRAINS = ["RWD", "FWD", "AWD", "4x4"] as const;
 
+/** Makes currently blocked from submissions due to documented aggressive
+ *  brand takedown action against community fitment files. */
+export const RESTRICTED_MAKES = [
+  "Honda",
+  "Acura",
+  "Chrysler",
+  "Dodge",
+  "Jeep",
+  "Ram",
+  "Fiat",
+  "Alfa Romeo",
+  "Maserati",
+  "Peugeot",
+  "Citroën",
+  "Citroen",
+  "DS",
+  "DS Automobiles",
+  "Opel",
+  "Vauxhall",
+  "Lancia",
+  "Abarth",
+] as const;
+
+export const RESTRICTED_MAKE_MESSAGE =
+  "Honda/Acura and Stellantis-brand vehicles (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa Romeo, Maserati, Peugeot, Citroën, Opel, Vauxhall, Lancia, Abarth) aren't currently supported due to aggressive brand enforcement against community fitment files.";
+
+export function normalizeMake(make: string) {
+  return make
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+export function isRestrictedMake(make: string): boolean {
+  const normalized = normalizeMake(make);
+  if (!normalized) return false;
+  return RESTRICTED_MAKES.some((m) => normalizeMake(m) === normalized);
+}
+
+
 export type Vehicle = {
   make: string;
   model: string;
