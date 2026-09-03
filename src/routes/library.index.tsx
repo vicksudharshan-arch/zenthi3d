@@ -467,7 +467,9 @@ function LibraryPage() {
                           {CONTRIBUTOR_TYPE_LABELS[t as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? t}
                         </span>
                       ))}
+                      {p.original_creator && <span>Created by {p.original_creator}</span>}
                       {p.source_link && (
+
                         <a
                           href={p.source_link}
                           target="_blank"
