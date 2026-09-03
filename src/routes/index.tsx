@@ -27,7 +27,7 @@ const STEPS = [
   {
     no: "01",
     title: "Someone solves it",
-    body: "A cracked HVAC vent clip on a 964. A dead sensor housing on a Diablo. Somebody already modelled a replacement.",
+    body: "A cracked HVAC vent clip on an old 911. A dead sensor housing on a Diablo. A better bracket for a Civic. Somebody already modelled a replacement.",
   },
   {
     no: "02",
@@ -51,10 +51,11 @@ function Index() {
             A shared library of 3D-printable parts for cars nobody else supports.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            Enthusiasts already figure out how to adapt and fabricate rare parts for exotic and
-            high-performance cars — measuring the broken bracket, modelling it at 2am, printing five
-            revisions until it clicks in. Zenthi is a place to share those solved problems, instead
-            of losing them in old forum threads.
+            Enthusiasts already figure out how to adapt and fabricate rare, hard-to-find parts —
+            measuring the broken bracket, modelling it at 2am, printing five revisions until it clicks
+            in. Whether it's a fix for a Lamborghini or a retrofit that improves a Honda Civic,
+            Zenthi is a place to share those solved problems, instead of losing them in old forum
+            threads.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
@@ -71,7 +72,7 @@ function Index() {
             </Link>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
-            PORSCHE · LAMBORGHINI · FERRARI · MASERATI · ALFA ROMEO · LOTUS · DE TOMASO AND MORE
+            HONDA · BMW · PORSCHE · MAZDA · TOYOTA · FERRARI · AND MORE
           </p>
         </div>
       </section>
