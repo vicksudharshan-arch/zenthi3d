@@ -27,12 +27,12 @@ const STEPS = [
   {
     no: "01",
     title: "Someone solves it",
-    body: "A cracked HVAC vent clip on an old 911. A dead sensor housing on a Diablo. A better bracket for a Civic. Somebody already modelled a replacement.",
+    body: "A cracked HVAC vent clip on an old 911. A dead sensor housing on a Diablo. A snapped washer fluid splitter on a Bronco. A better bracket for a Civic. Somebody already modelled a replacement.",
   },
   {
     no: "02",
     title: "It gets shared here",
-    body: "Upload a CAD model, 3D scan, cutting profile, or 2D drawing — STEP is recommended for edits, but the archive accepts multiple formats. Add fitment details and a writeup so the next person knows exactly what they're looking at.",
+    body: "Upload a CAD model, 3D scan, cutting profile, or 2D drawing — STEP is recommended for edits, but the library accepts multiple formats. Add fitment details and a writeup so the next person knows exactly what they're looking at.",
   },
   {
     no: "03",
@@ -95,16 +95,15 @@ function Index() {
         <div className="rounded-sm border border-border bg-card p-8">
           <p className="tech-label">Scope</p>
           <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
-            Shared for reference, not for safety-critical use.
+            If you can't find it, it probably belongs here.
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Zenthi is an innovation archive for car-part files — brackets, housings, covers, trim,
-            and more. The hardest, most inventive work often starts with high-performance and exotic
-            builds, but that spirit extends to any vehicle: mainstream daily drivers, retrofits, and
-            performance mods are welcome here. Printed polymer has no business holding a car together
-            or containing fuel, so use of the files is recommended for fitment purposes only. All files
-            are provided for reference only; verify fit, material suitability, and safety independently
-            before any real-world use.
+            Pretty much anything car-related that someone else might need someday: brackets, covers,
+            clips, housings, adapters, trim, and weird one-offs. Mods, retrofits, upgrades, and
+            everyday fixes are all welcome — from a Bronco's broken washer splitter to a Lamborghini
+            retrofit nobody else makes. The only hard rule is safety: printed polymer has no business
+            holding a car together or containing fuel. Use files for fitment and reference only, and
+            verify fit, material, and safety yourself before any real-world use.
           </p>
         </div>
       </section>
