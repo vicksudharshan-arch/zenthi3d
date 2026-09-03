@@ -312,8 +312,26 @@ function UploadPage() {
                     Check the original listing and select the license it was published under.
                   </p>
                 </div>
+                <div className="sm:col-span-2">
+                  <label className={labelCls} htmlFor="originalCreator">
+                    Credits (original creator)
+                  </label>
+                  <input
+                    id="originalCreator"
+                    type="text"
+                    required
+                    value={originalCreator}
+                    onChange={(e) => setOriginalCreator(e.target.value)}
+                    placeholder="Creator name or handle"
+                    className={fieldCls}
+                  />
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    Enter the creator's name, or type "Unknown" if you don't know who made it.
+                  </p>
+                </div>
               </div>
             )}
+
             {origin === "zenthi" && (
               <p className="font-mono text-xs text-muted-foreground">
                 Original uploads are published under CC BY, matching the agreement at the bottom of
