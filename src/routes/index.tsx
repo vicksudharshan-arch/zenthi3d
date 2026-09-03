@@ -8,13 +8,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A free community library of 3D-printable brackets, housings, covers and trim for exotic and high-performance cars. Share the fix instead of losing it in a forum thread.",
+          "A free community library of 3D-printable brackets, housings, covers, and trim for rare, hard-to-find, or interesting car parts. Share the fix instead of losing it in a forum thread.",
       },
       { property: "og:title", content: "Zenthi — a shared library of 3D-printable car parts" },
       {
         property: "og:description",
         content:
-          "Community-shared STEP and STL files for rare, non-safety-critical car parts. Browse the library or upload your own fix.",
+          "Community-shared CAD, scan, and cutting files for rare, non-safety-critical car parts. Browse the library or upload your own fix.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
