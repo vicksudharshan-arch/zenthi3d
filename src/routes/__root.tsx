@@ -79,13 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Zenthi — Rare parts. Real fixes." },
+      { title: "Zenthi — Build What Doesn't Exist." },
       {
         name: "description",
         content:
           "A carefully kept archive of rare, hard-to-find, and interesting car-part files for any car.",
       },
-      { property: "og:title", content: "Zenthi — Rare parts. Real fixes." },
+      { property: "og:title", content: "Zenthi — Build What Doesn't Exist." },
       {
         property: "og:description",
         content:
