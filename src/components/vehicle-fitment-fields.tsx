@@ -40,13 +40,26 @@ export function VehicleFitmentFields({
       {vehicles.map((v, i) => (
         <div key={i} className="space-y-3 rounded-sm border border-border bg-card p-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
-            <input
-              aria-label="Make"
-              value={v.make}
-              onChange={(e) => update(i, { make: e.target.value })}
-              placeholder="Make"
-              className={fieldCls + " mt-0"}
-            />
+            <div>
+              <input
+                aria-label="Make"
+                value={v.make}
+                onChange={(e) => update(i, { make: e.target.value })}
+                placeholder="Make"
+                className={
+                  fieldCls +
+                  " mt-0 " +
+                  (validateMakes && isRestrictedMake(v.make) ? errorCls : "")
+                }
+                aria-invalid={validateMakes && isRestrictedMake(v.make) ? "true" : "false"}
+              />
+              {makeHelperText && (
+                <p className={helperCls}>{makeHelperText}</p>
+              )}
+              {validateMakes && isRestrictedMake(v.make) && (
+                <p className={errorTextCls}>{RESTRICTED_MAKE_MESSAGE}</p>
+              )}
+            </div>
             <input
               aria-label="Model"
               value={v.model}
@@ -55,6 +68,7 @@ export function VehicleFitmentFields({
               className={fieldCls + " mt-0"}
             />
           </div>
+
           <div>
             <span className={labelCls + " mb-1 text-xs"}>Year range</span>
             <div className="grid grid-cols-2 gap-3">
