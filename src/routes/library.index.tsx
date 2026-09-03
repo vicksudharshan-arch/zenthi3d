@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
-import { PartPreviewModal } from "@/components/part-preview-modal";
+import { PartPreviewModal, type PreviewTarget } from "@/components/part-preview-modal";
 import {
   ExtraDownloadButtons,
   FormatBadges,
@@ -107,10 +107,14 @@ function LibraryPage() {
   });
   const [downloading, setDownloading] = useState<string | null>(null);
   const [preview, setPreview] = useState<{
-    id: string;
-    name: string;
-    step_file_name: string | null;
-    stl_file_name: string | null;
+    part: {
+      id: string;
+      name: string;
+      step_file_name: string | null;
+      stl_file_name: string | null;
+      extra_files: unknown;
+    };
+    target?: PreviewTarget;
   } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<EditablePart | null>(null);
@@ -363,10 +367,13 @@ function LibraryPage() {
                   id={`part-${p.id}`}
                   onDoubleClick={() =>
                     setPreview({
-                      id: p.id,
-                      name: p.name,
-                      step_file_name: p.step_file_name,
-                      stl_file_name: p.stl_file_name,
+                      part: {
+                        id: p.id,
+                        name: p.name,
+                        step_file_name: p.step_file_name,
+                        stl_file_name: p.stl_file_name,
+                        extra_files: p.extra_files,
+                      },
                     })
                   }
                   title="Double-click to preview the file"
@@ -497,10 +504,13 @@ function LibraryPage() {
                       <button
                         onClick={() =>
                           setPreview({
-                            id: p.id,
-                            name: p.name,
-                            step_file_name: p.step_file_name,
-                            stl_file_name: p.stl_file_name,
+                            part: {
+                              id: p.id,
+                              name: p.name,
+                              step_file_name: p.step_file_name,
+                              stl_file_name: p.stl_file_name,
+                              extra_files: p.extra_files,
+                            },
                           })
                         }
                         className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
@@ -580,7 +590,13 @@ function LibraryPage() {
         )}
       </div>
 
-      {preview && <PartPreviewModal part={preview} onClose={() => setPreview(null)} />}
+      {preview && (
+        <PartPreviewModal
+          part={preview.part}
+          target={preview.target}
+          onClose={() => setPreview(null)}
+        />
+      )}
 
       {editing && (
         <UploaderEditDialog
