@@ -51,12 +51,17 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <p className="tech-label mt-1">Community parts archive</p>
             </div>
             <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Files are shared by the community and are for non-safety-critical parts only. Verify
-              fit and function before use. Zenthi does not guarantee fitment or safety.
+              Zenthi does not restrict which car parts can be shared. Files are provided by the
+              community for fitment, measurement, and fabrication reference. Safety-critical parts
+              featured on this site (such as brakes, suspension, or structural components) are
+              recommended for fitment reference only — using a community-sourced or self-fabricated
+              part in place of an OEM safety-critical component for actual driving use is not
+              advised. Always verify fit, material suitability, and safety independently. Zenthi
+              does not guarantee fitment, safety, or performance of any file.
             </p>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
-            Uploads licensed CC BY 4.0 · No brakes, suspension, structural or fuel-system parts ·{" "}
+            Uploads licensed CC BY 4.0 ·{" "}
             <Link to="/copyright-policy" className="underline underline-offset-2 hover:text-foreground">
               Report a copyright concern
             </Link>

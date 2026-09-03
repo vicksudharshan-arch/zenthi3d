@@ -10,19 +10,34 @@ export type PartRow = {
   material: string | null;
   thickness_infill: string | null;
   contributor_type: string[];
-  vehicles: { make: string; model: string; yearFrom: string; yearTo: string }[];
+  vehicles: {
+    make: string;
+    model: string;
+    yearFrom: string;
+    yearTo: string;
+    engineMake?: string;
+    engineSeries?: string;
+    displacement?: string;
+    generation?: string;
+    drivetrain?: string;
+  }[];
   notes: string | null;
   uploader_name: string | null;
+  reference_only: boolean;
+  oem_part_numbers: string | null;
+  aftermarket_part_numbers: { brand: string; number: string }[];
+  extra_files: { kind: string; path: string; name: string; size: number }[];
   step_file_path: string | null;
   step_file_name: string | null;
   step_file_size: number | null;
   stl_file_path: string | null;
   stl_file_name: string | null;
   stl_file_size: number | null;
+  source_link: string | null;
+  license_type: string | null;
   status: string;
   created_at: string;
 };
-
 
 export const listAllParts = createServerFn({ method: "GET" }).handler(async () => {
   const { requireAdminUnlocked } = await import("./admin-gate.server");
@@ -57,23 +72,37 @@ const vehicleSchema = z.object({
   model: z.string(),
   yearFrom: z.string(),
   yearTo: z.string(),
+  engineMake: z.string().optional(),
+  engineSeries: z.string().optional(),
+  displacement: z.string().optional(),
+  generation: z.string().optional(),
+  drivetrain: z.string().optional(),
 });
+
+const aftermarketSchema = z.object({ brand: z.string(), number: z.string() });
+
+const editableFields = {
+  name: z.string().min(1),
+  description: z.string(),
+  category: z.string().min(1),
+  placement: z.string().nullable(),
+  material: z.string().nullable(),
+  thickness_infill: z.string().nullable(),
+  contributor_type: z.array(z.string()),
+  vehicles: z.array(vehicleSchema),
+  notes: z.string().nullable(),
+  reference_only: z.boolean(),
+  oem_part_numbers: z.string().nullable(),
+  aftermarket_part_numbers: z.array(aftermarketSchema),
+};
 
 export const updatePart = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
         id: z.string(),
-        name: z.string().min(1),
-        description: z.string(),
-        category: z.string().min(1),
-        placement: z.string().nullable(),
-        material: z.string().nullable(),
-        thickness_infill: z.string().nullable(),
-        contributor_type: z.array(z.string()),
-        vehicles: z.array(vehicleSchema),
-        notes: z.string().nullable(),
         uploader_name: z.string().nullable(),
+        ...editableFields,
       })
       .parse(input),
   )
@@ -87,21 +116,30 @@ export const updatePart = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+async function pathsForParts(ids: string[]) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: rows } = await supabaseAdmin
+    .from("parts")
+    .select("step_file_path, stl_file_path, extra_files")
+    .in("id", ids);
+  return Array.from(
+    new Set(
+      (rows ?? []).flatMap((r) => {
+        const extras = Array.isArray(r.extra_files) ? (r.extra_files as { path?: string }[]) : [];
+        return [r.step_file_path, r.stl_file_path, ...extras.map((f) => f?.path)];
+      }),
+    ),
+  ).filter((p): p is string => !!p);
+}
+
 export const deleteParts = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ ids: z.array(z.string()).min(1) }).parse(input))
   .handler(async ({ data }) => {
     const { requireAdminUnlocked } = await import("./admin-gate.server");
     await requireAdminUnlocked();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows } = await supabaseAdmin
-      .from("parts")
-      .select("step_file_path, stl_file_path")
-      .in("id", data.ids);
-    const paths = (rows ?? [])
-      .flatMap((r) => [r.step_file_path, r.stl_file_path])
-      .filter((p): p is string => !!p);
-    if (paths.length)
-      await supabaseAdmin.storage.from("part-files").remove(Array.from(new Set(paths)));
+    const paths = await pathsForParts(data.ids);
+    if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
     const { error } = await supabaseAdmin.from("parts").delete().in("id", data.ids);
     if (error) throw new Error(error.message);
     return { ok: true, deleted: data.ids.length };
@@ -109,22 +147,41 @@ export const deleteParts = createServerFn({ method: "POST" })
 
 export const getDownloadUrl = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ id: z.string(), format: z.enum(["step", "stl"]).optional() }).parse(input),
+    z
+      .object({
+        id: z.string(),
+        format: z.enum(["step", "stl", "extra"]).optional(),
+        extraIndex: z.number().int().optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error } = await supabaseAdmin
       .from("parts")
-      .select("step_file_path, step_file_name, stl_file_path, stl_file_name")
+      .select("step_file_path, step_file_name, stl_file_path, stl_file_name, extra_files")
       .eq("id", data.id)
       .eq("status", "approved")
       .maybeSingle();
     if (error || !part) throw new Error(error?.message ?? "Part not found");
 
-    const wantStl = data.format === "stl";
-    const path = wantStl ? part.stl_file_path : part.step_file_path;
-    const fileName = wantStl ? part.stl_file_name : part.step_file_name;
-    if (!path) throw new Error("That format isn't available for this part.");
+    let path: string | null = null;
+    let fileName: string | null = null;
+    if (data.format === "extra") {
+      const extras = Array.isArray(part.extra_files)
+        ? (part.extra_files as { path?: string; name?: string }[])
+        : [];
+      const f = extras[data.extraIndex ?? -1];
+      path = f?.path ?? null;
+      fileName = f?.name ?? null;
+    } else if (data.format === "stl") {
+      path = part.stl_file_path;
+      fileName = part.stl_file_name;
+    } else {
+      path = part.step_file_path;
+      fileName = part.step_file_name;
+    }
+    if (!path) throw new Error("That file isn't available for this part.");
 
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("part-files")
@@ -132,7 +189,6 @@ export const getDownloadUrl = createServerFn({ method: "POST" })
     if (signErr || !signed) throw new Error(signErr?.message ?? "Could not create download link");
     return { url: signed.signedUrl };
   });
-
 
 // ---- Public, uploader-scoped actions (no auth system: name-on-record check) ----
 
@@ -160,15 +216,7 @@ export const updatePartAsUploader = createServerFn({ method: "POST" })
       .object({
         id: z.string(),
         uploaderName: z.string().min(1),
-        name: z.string().min(1),
-        description: z.string(),
-        category: z.string().min(1),
-        placement: z.string().nullable(),
-        material: z.string().nullable(),
-        thickness_infill: z.string().nullable(),
-        contributor_type: z.array(z.string()),
-        vehicles: z.array(vehicleSchema),
-        notes: z.string().nullable(),
+        ...editableFields,
       })
       .parse(input),
   )
@@ -195,12 +243,12 @@ export const deletePartAsUploader = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error: readErr } = await supabaseAdmin
       .from("parts")
-      .select("uploader_name, step_file_path, stl_file_path")
+      .select("uploader_name")
       .eq("id", data.id)
       .maybeSingle();
     if (readErr || !part) throw new Error("Part not found");
     if (!nameMatches(data.uploaderName, part.uploader_name)) return { ok: false as const };
-    const paths = [part.step_file_path, part.stl_file_path].filter((p): p is string => !!p);
+    const paths = await pathsForParts([data.id]);
     if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
 
     const { error } = await supabaseAdmin.from("parts").delete().eq("id", data.id);
