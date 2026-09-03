@@ -4,13 +4,13 @@ import { SiteShell } from "@/components/site-shell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zenthi — Rare parts. Real fixes." },
+      { title: "Zenthi — Build What Doesn't Exist." },
       {
         name: "description",
         content:
           "A carefully kept archive of rare, hard-to-find, and interesting car-part files. From high-performance and exotic builds to everyday retrofits, share the fix instead of losing it in a forum thread.",
       },
-      { property: "og:title", content: "Zenthi — Rare parts. Real fixes." },
+      { property: "og:title", content: "Zenthi — Build What Doesn't Exist." },
       {
         property: "og:description",
         content:
@@ -48,7 +48,7 @@ function Index() {
         <div className="mx-auto w-full max-w-6xl px-5 py-24 sm:py-32">
           <p className="tech-label">Open archive · Rev. 01</p>
           <h1 className="mt-6 max-w-4xl font-display text-4xl leading-[1.08] font-semibold tracking-tight text-foreground sm:text-6xl">
-            Rare parts. Real fixes.
+            Build What Doesn't Exist.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Where car part innovation happens — rare fixes, retrofits, and hard-to-find parts for
