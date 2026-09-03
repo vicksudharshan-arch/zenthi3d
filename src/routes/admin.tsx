@@ -342,9 +342,18 @@ function AdminPage() {
                       className="rounded-sm border border-border px-2 py-1 font-mono text-xs"
                     >
                       {vehicleLabel(v)}
+                      {vehicleDetailLabel(v) && (
+                        <span className="block text-[0.65rem] text-muted-foreground">
+                          {vehicleDetailLabel(v)}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
+                <PartNumbers
+                  oem={p.oem_part_numbers}
+                  aftermarket={parseAftermarket(p.aftermarket_part_numbers)}
+                />
                 {p.notes && (
                   <p className="mt-4 rounded-sm bg-secondary/60 p-4 text-sm leading-relaxed whitespace-pre-wrap">
                     {p.notes}
