@@ -4,13 +4,13 @@ import { SiteShell } from "@/components/site-shell";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Zenthi — Where car part innovation happens" },
+      { title: "Zenthi — Rare parts. Real fixes." },
       {
         name: "description",
         content:
-          "An open innovation archive of rare, hard-to-find, and interesting car-part files. From high-performance and exotic builds to everyday retrofits, share the fix instead of losing it in a forum thread.",
+          "A carefully kept archive of rare, hard-to-find, and interesting car-part files. From high-performance and exotic builds to everyday retrofits, share the fix instead of losing it in a forum thread.",
       },
-      { property: "og:title", content: "Zenthi — Where car part innovation happens" },
+      { property: "og:title", content: "Zenthi — Rare parts. Real fixes." },
       {
         property: "og:description",
         content:
