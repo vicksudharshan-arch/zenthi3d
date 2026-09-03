@@ -75,6 +75,8 @@ function UploadPage() {
   const [origin, setOrigin] = useState<Origin>("zenthi");
   const [sourceLink, setSourceLink] = useState("");
   const [licenseType, setLicenseType] = useState("");
+  const [originalCreator, setOriginalCreator] = useState("");
+
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -122,7 +124,7 @@ function UploadPage() {
       toast.error("Add at least one vehicle this part fits.");
       return;
     }
-    if (contributorTypes.length === 0) {
+    if (origin === "zenthi" && contributorTypes.length === 0) {
       toast.error("Select at least one contributor tag — what best describes you.");
       return;
     }
@@ -141,7 +143,12 @@ function UploadPage() {
         toast.error("Select the license type of the original source file.");
         return;
       }
+      if (!originalCreator.trim()) {
+        toast.error("Add the original creator's name, or type 'Unknown'.");
+        return;
+      }
     }
+
 
     setSubmitting(true);
     try {
@@ -175,6 +182,8 @@ function UploadPage() {
         extra_files: extras,
         source_link: origin === "external" ? sourceLink.trim() : null,
         license_type: origin === "external" ? licenseType : "CC BY",
+        original_creator: origin === "external" ? originalCreator.trim() : null,
+
         license_accepted: true,
         status: "pending",
       });
@@ -312,8 +321,26 @@ function UploadPage() {
                     Check the original listing and select the license it was published under.
                   </p>
                 </div>
+                <div className="sm:col-span-2">
+                  <label className={labelCls} htmlFor="originalCreator">
+                    Credits (original creator)
+                  </label>
+                  <input
+                    id="originalCreator"
+                    type="text"
+                    required
+                    value={originalCreator}
+                    onChange={(e) => setOriginalCreator(e.target.value)}
+                    placeholder="Creator name or handle"
+                    className={fieldCls}
+                  />
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    Enter the creator's name, or type "Unknown" if you don't know who made it.
+                  </p>
+                </div>
               </div>
             )}
+
             {origin === "zenthi" && (
               <p className="font-mono text-xs text-muted-foreground">
                 Original uploads are published under CC BY, matching the agreement at the bottom of
@@ -574,6 +601,7 @@ function UploadPage() {
             <div>
               <span className={labelCls} id="contributorType-label">
                 You are a… (select all that apply)
+                {origin === "external" && " — optional"}
               </span>
               <div
                 role="group"
@@ -606,10 +634,13 @@ function UploadPage() {
               </div>
               {contributorTypes.length === 0 && (
                 <p className="mt-2 font-mono text-xs text-muted-foreground">
-                  Pick at least one tag.
+                  {origin === "external"
+                    ? "Optional when reuploading someone else's work."
+                    : "Pick at least one tag."}
                 </p>
               )}
             </div>
+
           </fieldset>
 
           <div className="rounded-sm border border-brass/50 bg-brass/10 p-5">

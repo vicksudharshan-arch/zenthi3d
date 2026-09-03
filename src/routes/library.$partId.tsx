@@ -65,6 +65,7 @@ type Part = {
   stl_file_name: string | null;
   source_link: string | null;
   license_type: string | null;
+  original_creator: string | null;
   created_at: string;
 };
 
@@ -79,7 +80,7 @@ function PartDetailPage() {
       const { data, error } = await supabase
         .from("parts")
         .select(
-          "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,created_at",
+          "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,original_creator,created_at",
         )
         .eq("id", partId)
         .eq("status", "approved")
@@ -229,7 +230,9 @@ function PartDetailPage() {
                     {CONTRIBUTOR_TYPE_LABELS[t as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? t}
                   </span>
                 ))}
+                {data.original_creator && <span>Created by {data.original_creator}</span>}
                 {data.source_link && (
+
                   <a
                     href={data.source_link}
                     target="_blank"
