@@ -73,17 +73,21 @@ export type Database = {
       }
       parts: {
         Row: {
+          aftermarket_part_numbers: Json
           category: string
           contributor_type: string[]
           created_at: string
           description: string
+          extra_files: Json
           id: string
           license_accepted: boolean
           license_type: string | null
           material: string | null
           name: string
           notes: string | null
+          oem_part_numbers: string | null
           placement: string | null
+          reference_only: boolean
           source_link: string | null
           status: string
           step_file_name: string | null
@@ -98,17 +102,21 @@ export type Database = {
           vehicles: Json
         }
         Insert: {
+          aftermarket_part_numbers?: Json
           category: string
           contributor_type?: string[]
           created_at?: string
           description?: string
+          extra_files?: Json
           id?: string
           license_accepted?: boolean
           license_type?: string | null
           material?: string | null
           name: string
           notes?: string | null
+          oem_part_numbers?: string | null
           placement?: string | null
+          reference_only?: boolean
           source_link?: string | null
           status?: string
           step_file_name?: string | null
@@ -123,17 +131,21 @@ export type Database = {
           vehicles?: Json
         }
         Update: {
+          aftermarket_part_numbers?: Json
           category?: string
           contributor_type?: string[]
           created_at?: string
           description?: string
+          extra_files?: Json
           id?: string
           license_accepted?: boolean
           license_type?: string | null
           material?: string | null
           name?: string
           notes?: string | null
+          oem_part_numbers?: string | null
           placement?: string | null
+          reference_only?: boolean
           source_link?: string | null
           status?: string
           step_file_name?: string | null

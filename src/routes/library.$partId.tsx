@@ -5,11 +5,20 @@ import { toast } from "sonner";
 
 import { SiteShell } from "@/components/site-shell";
 import { PartPreviewModal } from "@/components/part-preview-modal";
+import {
+  ExtraDownloadButtons,
+  FormatBadges,
+  PartNumbers,
+  ReferenceOnlyBadge,
+} from "@/components/part-meta";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPE_LABELS,
+  parseExtraFiles,
+  type AftermarketPartNumber,
   type Category,
+  vehicleDetailLabel,
   vehicleLabel,
   type Vehicle,
 } from "@/lib/parts";
@@ -22,12 +31,12 @@ export const Route = createFileRoute("/library/$partId")({
       {
         name: "description",
         content:
-          "Full details, fitment and print settings for a community-shared 3D-printable car part on Zenthi.",
+          "Full details, fitment, engine specifics, part numbers and file formats for a community-shared car part on Zenthi.",
       },
       { property: "og:title", content: "Part details — Zenthi" },
       {
         property: "og:description",
-        content: "Fitment, material and print settings for a shared 3D-printable car part.",
+        content: "Fitment, part numbers and fabrication notes for a shared car part file.",
       },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -41,11 +50,15 @@ type Part = {
   name: string;
   description: string;
   category: string;
+  reference_only: boolean;
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
   contributor_type: string[];
   vehicles: Vehicle[];
+  oem_part_numbers: string | null;
+  aftermarket_part_numbers: AftermarketPartNumber[];
+  extra_files: { kind: string; path: string; name: string; size: number }[];
   notes: string | null;
   uploader_name: string | null;
   step_file_name: string | null;
@@ -57,7 +70,7 @@ type Part = {
 
 function PartDetailPage() {
   const { partId } = Route.useParams();
-  const [downloading, setDownloading] = useState<"step" | "stl" | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const [preview, setPreview] = useState(false);
 
   const { data, isLoading } = useQuery({
@@ -66,7 +79,7 @@ function PartDetailPage() {
       const { data, error } = await supabase
         .from("parts")
         .select(
-          "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,created_at",
+          "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,created_at",
         )
         .eq("id", partId)
         .eq("status", "approved")
@@ -76,11 +89,16 @@ function PartDetailPage() {
     },
   });
 
-  async function download(format: "step" | "stl") {
+  const extras = parseExtraFiles(data?.extra_files);
+
+  async function download(format: "step" | "stl" | "extra", extraIndex?: number) {
     if (!data) return;
-    setDownloading(format);
+    const key = format === "extra" ? `extra:${extraIndex}` : format;
+    setDownloading(key);
     try {
-      const { url } = await getDownloadUrl({ data: { id: data.id, format } });
+      const { url } = await getDownloadUrl({
+        data: { id: data.id, format, ...(extraIndex !== undefined ? { extraIndex } : {}) },
+      });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
@@ -88,7 +106,6 @@ function PartDetailPage() {
       setDownloading(null);
     }
   }
-
 
   async function copyLink() {
     const url = window.location.href;
@@ -123,11 +140,21 @@ function PartDetailPage() {
           <article className="mt-8 rounded-sm border border-border bg-card p-8">
             <div className="flex items-start justify-between gap-4">
               <h1 className="font-display text-3xl font-semibold tracking-tight">{data.name}</h1>
-              <span className="shrink-0 rounded-sm bg-accent px-2 py-1 font-mono text-[0.65rem] tracking-widest text-accent-foreground uppercase">
-                {CATEGORY_LABELS[data.category as Category] ?? data.category}
-              </span>
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                {data.reference_only && <ReferenceOnlyBadge />}
+                <span className="rounded-sm bg-accent px-2 py-1 font-mono text-[0.65rem] tracking-widest text-accent-foreground uppercase">
+                  {CATEGORY_LABELS[data.category as Category] ?? data.category}
+                </span>
+              </div>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{data.description}</p>
+
+            {data.reference_only && (
+              <p className="mt-4 rounded-sm border border-amber-600/50 bg-amber-500/10 p-4 text-sm leading-relaxed">
+                The uploader marked this as reference/measurement only — it has not been verified as
+                a functional replacement. Verify fit, material suitability and safety independently.
+              </p>
+            )}
 
             <div className="mt-6">
               <p className="tech-label">Fits</p>
@@ -135,27 +162,26 @@ function PartDetailPage() {
                 {data.vehicles.map((v, i) => (
                   <li key={i} className="rounded-sm border border-border px-2 py-1 font-mono text-xs">
                     {vehicleLabel(v)}
+                    {vehicleDetailLabel(v) && (
+                      <span className="block text-[0.65rem] text-muted-foreground">
+                        {vehicleDetailLabel(v)}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <span className="tech-label">Formats</span>
-              {data.step_file_name && (
-                <span className="rounded-sm border border-primary px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-primary uppercase">
-                  STEP · editable
-                </span>
-              )}
-              {data.stl_file_name && (
-                <span className="rounded-sm border border-brass px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-brass-foreground uppercase">
-                  STL · print-ready
-                </span>
-              )}
+            <div className="mt-6">
+              <FormatBadges part={data} />
             </div>
 
-            <dl className="mt-6 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
+            <PartNumbers
+              oem={data.oem_part_numbers}
+              aftermarket={data.aftermarket_part_numbers}
+            />
 
+            <dl className="mt-6 grid gap-3 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-3">
               {data.placement && (
                 <div>
                   <dt className="tech-label">Recommended placement</dt>
@@ -186,7 +212,9 @@ function PartDetailPage() {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
               <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                 <span>
-                  {[data.step_file_name, data.stl_file_name].filter(Boolean).join(" · ")}
+                  {[data.step_file_name, data.stl_file_name, ...extras.map((f) => f.name)]
+                    .filter(Boolean)
+                    .join(" · ")}
                   {data.uploader_name ? ` · ${data.uploader_name}` : ""}
                 </span>
 
@@ -208,7 +236,7 @@ function PartDetailPage() {
                     rel="noopener noreferrer"
                     className="underline decoration-dotted underline-offset-2 hover:text-primary"
                   >
-                    Originally from: source listing ↗
+                    Source ↗
                   </a>
                 )}
                 {data.license_type && (
@@ -217,7 +245,7 @@ function PartDetailPage() {
                   </span>
                 )}
               </p>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <button
                   onClick={() => setPreview(true)}
                   className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
@@ -248,6 +276,11 @@ function PartDetailPage() {
                     {downloading === "stl" ? "Preparing…" : "Download STL"}
                   </button>
                 )}
+                <ExtraDownloadButtons
+                  extras={extras}
+                  onDownload={(i) => download("extra", i)}
+                  busyKey={downloading}
+                />
               </div>
             </div>
           </article>
@@ -265,7 +298,6 @@ function PartDetailPage() {
           onClose={() => setPreview(false)}
         />
       )}
-
     </SiteShell>
   );
 }

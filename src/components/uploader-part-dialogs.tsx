@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import {
+  AftermarketNumberFields,
+  VehicleFitmentFields,
+} from "@/components/vehicle-fitment-fields";
+import {
   CATEGORIES,
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
+  emptyVehicle,
+  type AftermarketPartNumber,
   type Vehicle,
 } from "@/lib/parts";
 import {
@@ -18,11 +24,14 @@ export type EditablePart = {
   name: string;
   description: string;
   category: string;
+  reference_only: boolean;
   placement: string | null;
   material: string | null;
   thickness_infill: string | null;
   contributor_type: string[];
   vehicles: Vehicle[];
+  oem_part_numbers: string | null;
+  aftermarket_part_numbers: AftermarketPartNumber[];
   notes: string | null;
   uploader_name: string | null;
 };
@@ -90,19 +99,24 @@ export function UploaderEditDialog({
   const [name, setName] = useState(part.name);
   const [description, setDescription] = useState(part.description ?? "");
   const [category, setCategory] = useState(part.category);
+  const [referenceOnly, setReferenceOnly] = useState(!!part.reference_only);
   const [placement, setPlacement] = useState(part.placement ?? "");
   const [material, setMaterial] = useState(part.material ?? "");
   const [thickness, setThickness] = useState(part.thickness_infill ?? "");
+  const [oemNumbers, setOemNumbers] = useState(part.oem_part_numbers ?? "");
+  const [aftermarket, setAftermarket] = useState<AftermarketPartNumber[]>(
+    part.aftermarket_part_numbers?.length
+      ? part.aftermarket_part_numbers
+      : [{ brand: "", number: "" }],
+  );
   const [notes, setNotes] = useState(part.notes ?? "");
   const [types, setTypes] = useState<string[]>(
     Array.isArray(part.contributor_type) ? part.contributor_type : [],
   );
   const [vehicles, setVehicles] = useState<Vehicle[]>(
-    part.vehicles.length ? part.vehicles : [{ make: "", model: "", yearFrom: "", yearTo: "" }],
+    part.vehicles.length ? part.vehicles : [emptyVehicle()],
   );
 
-  const updateVehicle = (i: number, patch: Partial<Vehicle>) =>
-    setVehicles((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
   async function check(e: React.FormEvent) {
     e.preventDefault();
@@ -131,11 +145,14 @@ export function UploaderEditDialog({
           name: name.trim(),
           description: description.trim(),
           category,
+          reference_only: referenceOnly,
           placement: placement.trim() || null,
           material: material.trim() || null,
           thickness_infill: thickness.trim() || null,
           contributor_type: types,
           vehicles: vehicles.filter((v) => v.make.trim() || v.model.trim()),
+          oem_part_numbers: oemNumbers.trim() || null,
+          aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
           notes: notes.trim() || null,
         },
       });
@@ -270,69 +287,47 @@ export function UploaderEditDialog({
             </div>
           </div>
 
+          <div className="rounded-sm border border-amber-600/50 bg-amber-500/10 p-4">
+            <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+              <input
+                type="checkbox"
+                checked={referenceOnly}
+                onChange={(e) => setReferenceOnly(e.target.checked)}
+                className="mt-1 size-4 shrink-0 accent-[var(--brass)]"
+              />
+              <span>Reference/measurement only — not verified as a functional replacement.</span>
+            </label>
+          </div>
+
           <div>
             <span className={labelCls}>Fitment</span>
-            <div className="mt-2 space-y-3">
-              {vehicles.map((v, i) => (
-                <div
-                  key={i}
-                  className="grid gap-3 rounded-sm border border-border bg-card p-3 sm:grid-cols-[1fr_1fr_5rem_5rem_auto]"
-                >
-                  <input
-                    aria-label="Make"
-                    value={v.make}
-                    onChange={(e) => updateVehicle(i, { make: e.target.value })}
-                    placeholder="Make"
-                    className={fieldCls + " mt-0"}
-                  />
-                  <input
-                    aria-label="Model"
-                    value={v.model}
-                    onChange={(e) => updateVehicle(i, { model: e.target.value })}
-                    placeholder="Model"
-                    className={fieldCls + " mt-0"}
-                  />
-                  <div className="sm:col-span-2">
-                    <span className={labelCls + " mb-1 text-xs"}>Year range</span>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        aria-label="Year from"
-                        value={v.yearFrom}
-                        onChange={(e) => updateVehicle(i, { yearFrom: e.target.value })}
-                        placeholder="Year from"
-                        className={fieldCls + " mt-0 font-mono"}
-                      />
-                      <input
-                        aria-label="Year to"
-                        value={v.yearTo}
-                        onChange={(e) => updateVehicle(i, { yearTo: e.target.value })}
-                        placeholder="Year to"
-                        className={fieldCls + " mt-0 font-mono"}
-                      />
-                    </div>
-                  </div>
-                  {vehicles.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setVehicles((vs) => vs.filter((_, idx) => idx !== i))}
-                      className="rounded-sm px-3 text-sm text-muted-foreground hover:text-destructive"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() =>
-                  setVehicles((vs) => [...vs, { make: "", model: "", yearFrom: "", yearTo: "" }])
-                }
-                className="rounded-sm border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:border-brass hover:text-brass-foreground"
-              >
-                + Add another vehicle
-              </button>
+            <div className="mt-2">
+              <VehicleFitmentFields
+                vehicles={vehicles}
+                onChange={setVehicles}
+                idPrefix="owner"
+              />
             </div>
           </div>
+
+          <div>
+            <label className={labelCls} htmlFor="owner-oem">
+              OEM part number(s)
+            </label>
+            <input
+              id="owner-oem"
+              value={oemNumbers}
+              onChange={(e) => setOemNumbers(e.target.value)}
+              placeholder="Comma-separated"
+              className={fieldCls + " font-mono"}
+            />
+          </div>
+
+          <div>
+            <span className={labelCls}>Aftermarket part number(s)</span>
+            <AftermarketNumberFields rows={aftermarket} onChange={setAftermarket} />
+          </div>
+
 
           <div>
             <span className={labelCls}>Contributor tags</span>
