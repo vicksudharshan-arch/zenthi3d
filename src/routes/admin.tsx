@@ -15,6 +15,7 @@ import {
   CONTRIBUTOR_TYPE_LABELS,
   emptyVehicle,
   parseAftermarket,
+  parseExtraFiles,
   vehicleDetailLabel,
   vehicleLabel,
   type Category,
