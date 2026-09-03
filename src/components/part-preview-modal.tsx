@@ -28,7 +28,7 @@ export function PartPreviewModal({
   onClose,
 }: {
   part: PreviewPart;
-  target?: PreviewTarget;
+  target?: PreviewTarget | undefined;
   onClose: () => void;
 }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
