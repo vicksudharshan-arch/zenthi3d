@@ -75,7 +75,7 @@ function Index() {
             </Link>
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
-            HONDA · BMW · PORSCHE · MAZDA · TOYOTA · FERRARI · AND MORE
+            BMW · PORSCHE · MAZDA · TOYOTA · FERRARI · AND MORE
           </p>
         </div>
       </section>
