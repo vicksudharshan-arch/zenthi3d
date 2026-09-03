@@ -79,16 +79,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Zenthi — open library of 3D-printable car parts" },
+      { title: "Zenthi — Where car part innovation happens" },
       {
         name: "description",
         content:
-          "A free community library of 3D-printable brackets, housings, covers, and trim for any car — from mainstream retrofits to high-performance and exotic builds.",
+          "An open innovation archive of rare, hard-to-find, and interesting car-part files for any car.",
       },
-      { property: "og:title", content: "Zenthi" },
+      { property: "og:title", content: "Zenthi — Where car part innovation happens" },
       {
         property: "og:description",
-        content: "A shared library of 3D-printable parts for cars nobody else supports.",
+        content:
+          "Community-shared CAD, scan, and cutting files for rare, hard-to-find car parts.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
