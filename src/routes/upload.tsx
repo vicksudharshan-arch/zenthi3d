@@ -115,6 +115,12 @@ function UploadPage() {
       toast.error("Add at least one vehicle this part fits.");
       return;
     }
+    const restrictedVehicle = cleanVehicles.find((v) => isRestrictedMake(v.make));
+    if (restrictedVehicle) {
+      toast.error(RESTRICTED_MAKE_MESSAGE);
+      return;
+    }
+
     if (origin === "zenthi" && contributorTypes.length === 0) {
       toast.error("Select at least one contributor tag — what best describes you.");
       return;
