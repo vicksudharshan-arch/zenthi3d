@@ -75,11 +75,12 @@ type Part = {
   stl_file_name: string | null;
   source_link: string | null;
   license_type: string | null;
+  original_creator: string | null;
   created_at: string;
 };
 
 const PART_COLUMNS =
-  "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,created_at";
+  "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,original_creator,created_at";
 
 const VEHICLE_FILTERS = [
   { key: "engineMake", label: "engine makes", placeholder: "All engine makes" },
