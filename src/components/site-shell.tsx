@@ -66,7 +66,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
               Report a copyright concern
             </Link>
           </p>
-
+          <p className="mt-4 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+            Zenthi is not affiliated with, sponsored by, or endorsed by any vehicle manufacturer.
+            Brand and model names are used solely to describe vehicle compatibility. No file on this
+            site is an official or licensed product of the referenced manufacturer.
+          </p>
         </div>
       </footer>
     </div>
