@@ -574,6 +574,7 @@ function UploadPage() {
             <div>
               <span className={labelCls} id="contributorType-label">
                 You are a… (select all that apply)
+                {origin === "external" && " — optional"}
               </span>
               <div
                 role="group"
@@ -606,10 +607,13 @@ function UploadPage() {
               </div>
               {contributorTypes.length === 0 && (
                 <p className="mt-2 font-mono text-xs text-muted-foreground">
-                  Pick at least one tag.
+                  {origin === "external"
+                    ? "Optional when reuploading someone else's work."
+                    : "Pick at least one tag."}
                 </p>
               )}
             </div>
+
           </fieldset>
 
           <div className="rounded-sm border border-brass/50 bg-brass/10 p-5">
