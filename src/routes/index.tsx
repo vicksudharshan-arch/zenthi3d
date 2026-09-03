@@ -37,7 +37,8 @@ const STEPS = [
   {
     no: "03",
     title: "It stays findable",
-    body: "Reviewed, catalogued by make, model and year range, and free to download forever — not buried on page 14 of a thread.",
+    body: "Reviewed, catalogued by make, model and year range, and free to download forever — not buried on page 14 of a thread. Files aren't just for printing either: they're a reference you can measure, study and reverse-engineer a part from.",
+
   },
 ];
 
