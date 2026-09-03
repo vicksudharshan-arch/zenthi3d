@@ -79,10 +79,12 @@ export type Database = {
           description: string
           id: string
           license_accepted: boolean
+          license_type: string | null
           material: string | null
           name: string
           notes: string | null
           placement: string | null
+          source_link: string | null
           status: string
           step_file_name: string | null
           step_file_path: string | null
@@ -102,10 +104,12 @@ export type Database = {
           description?: string
           id?: string
           license_accepted?: boolean
+          license_type?: string | null
           material?: string | null
           name: string
           notes?: string | null
           placement?: string | null
+          source_link?: string | null
           status?: string
           step_file_name?: string | null
           step_file_path?: string | null
@@ -125,10 +129,12 @@ export type Database = {
           description?: string
           id?: string
           license_accepted?: boolean
+          license_type?: string | null
           material?: string | null
           name?: string
           notes?: string | null
           placement?: string | null
+          source_link?: string | null
           status?: string
           step_file_name?: string | null
           step_file_path?: string | null

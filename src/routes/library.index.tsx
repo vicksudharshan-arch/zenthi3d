@@ -60,11 +60,13 @@ type Part = {
   uploader_name: string | null;
   step_file_name: string | null;
   stl_file_name: string | null;
+  source_link: string | null;
+  license_type: string | null;
   created_at: string;
 };
 
 const PART_COLUMNS =
-  "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,created_at";
+  "id,name,description,category,placement,material,thickness_infill,contributor_type,vehicles,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,created_at";
 
 function LibraryPage() {
   const { part: sharedId } = Route.useSearch();
@@ -370,6 +372,21 @@ function LibraryPage() {
                           {CONTRIBUTOR_TYPE_LABELS[t as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? t}
                         </span>
                       ),
+                    )}
+                    {p.source_link && (
+                      <a
+                        href={p.source_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-dotted underline-offset-2 hover:text-primary"
+                      >
+                        Sourced from original listing ↗
+                      </a>
+                    )}
+                    {p.license_type && (
+                      <span className="rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground">
+                        {p.license_type}
+                      </span>
                     )}
                   </p>
                   <div className="flex shrink-0 items-center gap-2">
