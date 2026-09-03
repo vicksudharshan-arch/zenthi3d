@@ -107,8 +107,19 @@ function Index() {
             holding a car together or containing fuel. Use files for fitment and reference only, and
             verify fit, material, and safety yourself before any real-world use.
           </p>
+          <div className="mt-6 max-w-3xl rounded-sm border border-brass/30 bg-brass/5 p-4">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              <span className="font-medium text-foreground">A note on brand coverage:</span>{" "}
+              Honda/Acura and Stellantis-brand vehicles (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa
+              Romeo, Maserati, Peugeot, Citroën, Opel, Vauxhall, Lancia) currently aren't supported.
+              These manufacturers have a documented history of aggressive legal takedown action
+              against community fitment files, even ones with no logo or trademark use — we'd rather
+              not put contributors at risk.
+            </p>
+          </div>
         </div>
       </section>
+
     </SiteShell>
   );
 }

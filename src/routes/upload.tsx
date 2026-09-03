@@ -12,13 +12,16 @@ import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
+  RESTRICTED_MAKE_MESSAGE,
   SAFETY_SENSITIVE_CATEGORIES,
   emptyVehicle,
+  isRestrictedMake,
   type AftermarketPartNumber,
   type Category,
   type ContributorType,
   type Vehicle,
 } from "@/lib/parts";
+
 
 export const Route = createFileRoute("/upload")({
   head: () => ({
@@ -112,6 +115,12 @@ function UploadPage() {
       toast.error("Add at least one vehicle this part fits.");
       return;
     }
+    const restrictedVehicle = cleanVehicles.find((v) => isRestrictedMake(v.make));
+    if (restrictedVehicle) {
+      toast.error(RESTRICTED_MAKE_MESSAGE);
+      return;
+    }
+
     if (origin === "zenthi" && contributorTypes.length === 0) {
       toast.error("Select at least one contributor tag — what best describes you.");
       return;
@@ -464,7 +473,14 @@ function UploadPage() {
               Engine and drivetrain details are optional, but they matter a lot for swapped project
               cars where make, model and year alone aren't specific enough.
             </p>
-            <VehicleFitmentFields vehicles={vehicles} onChange={setVehicles} idPrefix="upload" />
+            <VehicleFitmentFields
+              vehicles={vehicles}
+              onChange={setVehicles}
+              idPrefix="upload"
+              makeHelperText="Honda/Acura and Stellantis-brand vehicles aren't currently supported — see homepage for why."
+              validateMakes
+            />
+
           </fieldset>
 
           <fieldset className="space-y-6">

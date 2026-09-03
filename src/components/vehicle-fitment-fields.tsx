@@ -1,8 +1,18 @@
-import { DRIVETRAINS, emptyVehicle, type Vehicle } from "@/lib/parts";
+import {
+  DRIVETRAINS,
+  RESTRICTED_MAKE_MESSAGE,
+  emptyVehicle,
+  isRestrictedMake,
+  type Vehicle,
+} from "@/lib/parts";
+import type { ReactNode } from "react";
 
 const labelCls = "tech-label block";
 const fieldCls =
   "mt-2 w-full rounded-sm border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/25";
+const errorCls = "border-destructive focus:border-destructive focus:ring-destructive/25";
+const helperCls = "mt-2 text-xs leading-relaxed text-muted-foreground";
+const errorTextCls = "mt-2 text-xs leading-relaxed text-destructive";
 
 /**
  * Shared fitment editor used by the public upload form, the uploader edit
@@ -12,11 +22,16 @@ export function VehicleFitmentFields({
   vehicles,
   onChange,
   idPrefix = "fitment",
+  makeHelperText,
+  validateMakes = false,
 }: {
   vehicles: Vehicle[];
   onChange: (next: Vehicle[]) => void;
   idPrefix?: string;
+  makeHelperText?: ReactNode;
+  validateMakes?: boolean;
 }) {
+
   const update = (i: number, patch: Partial<Vehicle>) =>
     onChange(vehicles.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
 
@@ -25,13 +40,26 @@ export function VehicleFitmentFields({
       {vehicles.map((v, i) => (
         <div key={i} className="space-y-3 rounded-sm border border-border bg-card p-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
-            <input
-              aria-label="Make"
-              value={v.make}
-              onChange={(e) => update(i, { make: e.target.value })}
-              placeholder="Make"
-              className={fieldCls + " mt-0"}
-            />
+            <div>
+              <input
+                aria-label="Make"
+                value={v.make}
+                onChange={(e) => update(i, { make: e.target.value })}
+                placeholder="Make"
+                className={
+                  fieldCls +
+                  " mt-0 " +
+                  (validateMakes && isRestrictedMake(v.make) ? errorCls : "")
+                }
+                aria-invalid={validateMakes && isRestrictedMake(v.make) ? "true" : "false"}
+              />
+              {makeHelperText && (
+                <p className={helperCls}>{makeHelperText}</p>
+              )}
+              {validateMakes && isRestrictedMake(v.make) && (
+                <p className={errorTextCls}>{RESTRICTED_MAKE_MESSAGE}</p>
+              )}
+            </div>
             <input
               aria-label="Model"
               value={v.model}
@@ -40,6 +68,7 @@ export function VehicleFitmentFields({
               className={fieldCls + " mt-0"}
             />
           </div>
+
           <div>
             <span className={labelCls + " mb-1 text-xs"}>Year range</span>
             <div className="grid grid-cols-2 gap-3">
