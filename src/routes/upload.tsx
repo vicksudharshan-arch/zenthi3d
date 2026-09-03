@@ -54,7 +54,7 @@ function UploadPage() {
   const [stepFile, setStepFile] = useState<File | null>(null);
   const [stlFile, setStlFile] = useState<File | null>(null);
   const [sourceLink, setSourceLink] = useState("");
-  const [licenseType, setLicenseType] = useState("");
+  const [licenseType, setLicenseType] = useState("CC BY");
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -105,10 +105,14 @@ function UploadPage() {
         toast.error("The source link doesn't look like a valid URL.");
         return;
       }
-      if (!licenseType) {
-        toast.error("License type is required when the file came from another site.");
-        return;
-      }
+    }
+    if (!licenseType) {
+      toast.error(
+        sourceLink.trim()
+          ? "Select the license type of the original source file."
+          : "Select a license type.",
+      );
+      return;
     }
 
     setSubmitting(true);
@@ -403,19 +407,26 @@ function UploadPage() {
             <div className="grid gap-6 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-2">
               <div>
                 <label className={labelCls} htmlFor="sourceLink">
-                  Source link (if from another site)
+                  Source link (optional)
                 </label>
                 <input
                   id="sourceLink"
                   type="url"
                   value={sourceLink}
-                  onChange={(e) => setSourceLink(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSourceLink((prev) => {
+                      if (!prev.trim() && v.trim()) setLicenseType("");
+                      else if (prev.trim() && !v.trim()) setLicenseType("CC BY");
+                      return v;
+                    });
+                  }}
                   placeholder="https://www.thingiverse.com/thing:…"
                   className={fieldCls}
                 />
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  If this file originally came from somewhere else (Thingiverse, Printables, etc.),
-                  link to the original listing here.
+                  If this file originally came from another site (like Thingiverse or Printables),
+                  paste the link here for attribution. Leave blank if you made this yourself.
                 </p>
               </div>
               <div>
@@ -424,20 +435,25 @@ function UploadPage() {
                 </label>
                 <select
                   id="licenseType"
+                  required
                   value={licenseType}
                   onChange={(e) => setLicenseType(e.target.value)}
                   className={fieldCls}
                 >
-                  <option value="">—</option>
+                  <option value="" disabled>
+                    Select license…
+                  </option>
                   <option value="CC0">CC0</option>
-                  <option value="CC-BY-4.0">CC-BY-4.0</option>
-                  <option value="CC-BY-SA-4.0">CC-BY-SA-4.0</option>
-                  <option value="CC-BY-NC-4.0">CC-BY-NC-4.0</option>
-                  <option value="Other / describe in notes">Other / describe in notes</option>
+                  <option value="CC BY">CC BY</option>
+                  <option value="CC BY-SA">CC BY-SA</option>
+                  <option value="CC BY-NC">CC BY-NC</option>
+                  <option value="CC BY-ND">CC BY-ND</option>
+                  <option value="Other/Unsure">Other/Unsure</option>
                 </select>
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  e.g. CC0, CC-BY-4.0, CC-BY-SA-4.0 — required if this came from another site under
-                  a specific license.
+                  {sourceLink.trim()
+                    ? "Select the license of the original source file — check the original listing."
+                    : "Original uploads default to CC BY, matching the agreement below."}
                 </p>
               </div>
             </div>
