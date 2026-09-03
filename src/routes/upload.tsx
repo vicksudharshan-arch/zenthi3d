@@ -114,8 +114,8 @@ function UploadPage() {
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
         step_file_path: stepPath,
-        step_file_name: stepFile.name,
-        step_file_size: stepFile.size,
+        step_file_name: stepFile?.name ?? null,
+        step_file_size: stepFile?.size ?? null,
         stl_file_path: stlPath,
         stl_file_name: stlFile?.name ?? null,
         stl_file_size: stlFile?.size ?? null,
@@ -336,9 +336,13 @@ function UploadPage() {
 
           <fieldset className="space-y-6">
             <legend className="tech-label mb-4 text-brass">03 — Files & writeup</legend>
+            <p className="font-mono text-xs leading-relaxed text-muted-foreground">
+              STEP is more useful to the community when you have it — it can be exported to STL,
+              but not the other way around. Provide at least one file to submit.
+            </p>
             <div>
               <label className={labelCls} htmlFor="stepFile">
-                STEP file (required)
+                STEP file (recommended)
               </label>
               <input
                 id="stepFile"
