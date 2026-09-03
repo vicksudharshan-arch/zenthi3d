@@ -12,13 +12,16 @@ import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
+  RESTRICTED_MAKE_MESSAGE,
   SAFETY_SENSITIVE_CATEGORIES,
   emptyVehicle,
+  isRestrictedMake,
   type AftermarketPartNumber,
   type Category,
   type ContributorType,
   type Vehicle,
 } from "@/lib/parts";
+
 
 export const Route = createFileRoute("/upload")({
   head: () => ({
