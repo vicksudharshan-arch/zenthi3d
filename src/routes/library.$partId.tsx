@@ -230,7 +230,9 @@ function PartDetailPage() {
                     {CONTRIBUTOR_TYPE_LABELS[t as keyof typeof CONTRIBUTOR_TYPE_LABELS] ?? t}
                   </span>
                 ))}
+                {data.original_creator && <span>Created by {data.original_creator}</span>}
                 {data.source_link && (
+
                   <a
                     href={data.source_link}
                     target="_blank"
