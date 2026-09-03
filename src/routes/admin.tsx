@@ -272,12 +272,25 @@ function AdminPage() {
                       className="mt-1.5 size-4 accent-[var(--primary)]"
                     />
                     <div>
-                      <h2 className="font-display text-xl font-semibold">{p.name}</h2>
+                      <h2 className="flex flex-wrap items-center gap-2 font-display text-xl font-semibold">
+                        {p.name}
+                        {p.reference_only && <ReferenceOnlyBadge />}
+                      </h2>
                       <p className="mt-1 font-mono text-xs text-muted-foreground">
                         {CATEGORY_LABELS[p.category as Category] ?? p.category} ·{" "}
-                        {[p.step_file_name, p.stl_file_name].filter(Boolean).join(" · ")} · {new Date(p.created_at).toLocaleDateString()}
+                        {[
+                          p.step_file_name,
+                          p.stl_file_name,
+                          ...parseExtraFiles(p.extra_files).map((f) => f.name),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}{" "}
+                        · {new Date(p.created_at).toLocaleDateString()}
                         {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                       </p>
+                      <div className="mt-2">
+                        <FormatBadges part={p} />
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
