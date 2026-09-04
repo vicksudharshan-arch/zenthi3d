@@ -32,11 +32,18 @@ export function SiteShell({ children }: { children: ReactNode }) {
               Library
             </Link>
             <Link
+              to="/requests"
+              className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+            >
+              Requests
+            </Link>
+            <Link
               to="/upload"
               className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
             >
               Upload
             </Link>
+
           </nav>
         </div>
       </header>
