@@ -141,6 +141,12 @@ function SelectedFileList({
 
 
 function UploadPage() {
+  const { requestId } = Route.useSearch();
+  const { data: requestSummary } = useQuery({
+    queryKey: ["request-summary", requestId],
+    enabled: !!requestId,
+    queryFn: () => getRequestSummary({ data: { id: requestId! } }),
+  });
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [uploader, setUploader] = useState("");
