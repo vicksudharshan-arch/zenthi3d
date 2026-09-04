@@ -133,7 +133,7 @@ function AdminGate() {
   return <AdminPage />;
 }
 
-const TABS = ["pending", "approved", "rejected"] as const;
+const TABS = ["pending", "approved", "private_fulfillment", "rejected"] as const;
 
 const labelCls = "tech-label block";
 const fieldCls =
@@ -151,7 +151,7 @@ function AdminPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: (vars: { id: string; status: "approved" | "rejected" | "pending" }) =>
+    mutationFn: (vars: { id: string; status: "approved" | "rejected" | "pending" | "private_fulfillment" }) =>
       setPartStatus({ data: vars }),
     onSuccess: (_d, vars) => {
       toast.success(`Marked ${vars.status}.`);
@@ -225,7 +225,7 @@ function AdminPage() {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t} ({(data ?? []).filter((p) => p.status === t).length})
+              {t.replace("_", " ")} ({(data ?? []).filter((p) => p.status === t).length})
             </button>
           ))}
         </div>

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { DRIVETRAINS, RESTRICTED_MAKE_MESSAGE, isRestrictedMake } from "@/lib/parts";
-import { reopenRequest } from "@/lib/requests.functions";
+import { reopenRequest, revealPrivateFulfillment } from "@/lib/requests.functions";
 
 export const Route = createFileRoute("/requests")({
   head: () => ({
@@ -93,6 +93,7 @@ function RequestsPage() {
   const [makeFilter, setMakeFilter] = useState("all");
   const [modelFilter, setModelFilter] = useState("all");
   const [reopening, setReopening] = useState<RequestRow | null>(null);
+  const [revealing, setRevealing] = useState<RequestRow | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["requests"],
@@ -107,6 +108,27 @@ function RequestsPage() {
   });
 
   const requests = data ?? [];
+
+  const fulfilledIds = requests
+    .map((r) => r.fulfilled_part_id)
+    .filter((id): id is string => !!id);
+
+  // Only approved parts are readable publicly, so anything missing here is a
+  // private fulfillment and must not be linked from the board.
+  const { data: publicPartIds } = useQuery({
+    queryKey: ["requests", "public-parts", fulfilledIds.join(",")],
+    enabled: fulfilledIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("parts")
+        .select("id")
+        .eq("status", "approved")
+        .in("id", fulfilledIds);
+      if (error) throw error;
+      return (data ?? []).map((p) => p.id as string);
+    },
+  });
+  const publicIds = new Set(publicPartIds ?? []);
 
   const makes = useMemo(
     () => Array.from(new Set(requests.map((r) => r.make?.trim()).filter(Boolean) as string[])).sort(),
@@ -500,7 +522,7 @@ function RequestsPage() {
                       </Link>
                     ) : (
                       <>
-                        {r.fulfilled_part_id && (
+                        {r.fulfilled_part_id && publicIds.has(r.fulfilled_part_id) && (
                           <Link
                             to="/library/$partId"
                             params={{ partId: r.fulfilled_part_id }}
@@ -508,6 +530,15 @@ function RequestsPage() {
                           >
                             View the part
                           </Link>
+                        )}
+                        {r.fulfilled_part_id && !publicIds.has(r.fulfilled_part_id) && (
+                          <button
+                            type="button"
+                            onClick={() => setRevealing(r)}
+                            className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm hover:bg-secondary"
+                          >
+                            Private file — reveal download
+                          </button>
                         )}
                         <button
                           type="button"

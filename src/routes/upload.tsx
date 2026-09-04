@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getRequestSummary } from "@/lib/requests.functions";
+import { finalizeRequestFulfillment, getRequestSummary } from "@/lib/requests.functions";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import {
@@ -58,6 +58,7 @@ const fileCls =
   " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground";
 
 type Origin = "zenthi" | "external" | "modified";
+type Visibility = "private" | "public_reviewed" | "public_auto";
 
 type FileStatus = {
   status: "uploading" | "done" | "error";
@@ -165,6 +166,7 @@ function UploadPage() {
   const [stlFiles, setStlFiles] = useState<File[]>([]);
   const [extraFiles, setExtraFiles] = useState<File[]>([]);
   const [origin, setOrigin] = useState<Origin>("zenthi");
+  const [visibility, setVisibility] = useState<Visibility>("public_reviewed");
   const [sourceLink, setSourceLink] = useState("");
   const [licenseType, setLicenseType] = useState("");
   const [originalCreator, setOriginalCreator] = useState("");
@@ -174,6 +176,7 @@ function UploadPage() {
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [submittedStatus, setSubmittedStatus] = useState<string>("pending");
   const [statuses, setStatuses] = useState<Record<string, FileStatus>>({});
   const uploadedRef = useRef<Record<string, string>>({});
 
@@ -361,7 +364,15 @@ function UploadPage() {
         extras.push({ kind, path: await uploadFile(file, "extra"), name: file.name, size: file.size });
       }
 
-      const { error } = await supabase.from("parts").insert({
+      const submissionStatus = requestId
+        ? visibility === "private"
+          ? "private_fulfillment"
+          : visibility === "public_auto"
+            ? "approved"
+            : "pending"
+        : "pending";
+
+      const { data: inserted, error } = await supabase.from("parts").insert({
         request_id: requestId ?? null,
         name: name.trim(),
         description: description.trim(),
@@ -396,9 +407,13 @@ function UploadPage() {
         modification_notes: origin === "modified" ? modificationNotes.trim() : null,
 
         license_accepted: true,
-        status: "pending",
-      });
+        status: submissionStatus,
+      }).select("id").maybeSingle();
       if (error) throw error;
+      if (requestId && inserted?.id && submissionStatus !== "pending") {
+        await finalizeRequestFulfillment({ data: { requestId, partId: inserted.id } });
+      }
+      setSubmittedStatus(submissionStatus);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -414,11 +429,18 @@ function UploadPage() {
         <div className="mx-auto w-full max-w-2xl px-5 py-28 text-center">
           <p className="tech-label">Submission received</p>
           <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight">
-            Thanks — this is queued for a quick review before it goes live.
+            {submittedStatus === "private_fulfillment"
+              ? "Thanks — sent privately to the requester."
+              : submittedStatus === "approved"
+                ? "Thanks — your file is live."
+                : "Thanks — this is queued for a quick review before it goes live."}
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            We check that the fitment details make sense and that the attribution is in order. Once
-            approved it appears in the public library.
+            {submittedStatus === "private_fulfillment"
+              ? "It stays out of the public library and search. The request is now marked fulfilled, and the requester can reveal the download from their request card."
+              : submittedStatus === "approved"
+                ? "It's in the public library now and the request is marked fulfilled."
+                : "We check that the fitment details make sense and that the attribution is in order. Once approved it appears in the public library."}
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Link
@@ -462,6 +484,62 @@ function UploadPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-10">
+          {requestId && (
+            <fieldset className="space-y-4">
+              <legend className="tech-label mb-4 text-brass">00 — Who can see this file?</legend>
+              <div className="grid gap-3">
+                {(
+                  [
+                    [
+                      "private",
+                      "Private — only visible to the requester",
+                      "Stays out of the public library and search. The requester can reveal a download link from their request card.",
+                    ],
+                    [
+                      "public_reviewed",
+                      "Public — goes through normal review",
+                      "Queued for a quick check. It appears in the library and fulfils the request once approved.",
+                    ],
+                    [
+                      "public_auto",
+                      "Public — publish immediately, skip review",
+                      "Skips review — your submission goes live immediately without a check.",
+                    ],
+                  ] as const
+                ).map(([value, label, help]) => (
+                  <label
+                    key={value}
+                    className={
+                      "flex cursor-pointer items-start gap-3 rounded-sm border p-4 text-sm transition-colors " +
+                      (visibility === value
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:border-ring")
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="visibility"
+                      value={value}
+                      checked={visibility === value}
+                      onChange={() => setVisibility(value)}
+                      className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
+                    />
+                    <span>
+                      {label}
+                      <span
+                        className={
+                          "mt-1 block text-xs leading-relaxed " +
+                          (value === "public_auto" ? "text-brass" : "text-muted-foreground")
+                        }
+                      >
+                        {help}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <fieldset className="space-y-4">
             <legend className="tech-label mb-4 text-brass">01 — Where is this file from?</legend>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
