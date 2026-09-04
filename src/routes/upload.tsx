@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getRequestSummary } from "@/lib/requests.functions";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import {
@@ -26,6 +28,9 @@ import {
 
 
 export const Route = createFileRoute("/upload")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    requestId: typeof search["requestId"] === "string" ? (search["requestId"] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Upload a part file — Zenthi" },
@@ -352,6 +357,7 @@ function UploadPage() {
       }
 
       const { error } = await supabase.from("parts").insert({
+        request_id: requestId ?? null,
         name: name.trim(),
         description: description.trim(),
         category,
@@ -431,6 +437,17 @@ function UploadPage() {
   return (
     <SiteShell>
       <div className="mx-auto w-full max-w-3xl px-5 py-16">
+        {requestSummary && (
+          <div className="mb-8 rounded-sm border border-primary/40 bg-primary/5 p-4 text-sm text-foreground">
+            <p className="tech-label mb-2 text-brass">Fulfilling a request</p>
+            <p>
+              You're fulfilling a request: {requestSummary.part_description}
+              {requestSummary.make || requestSummary.model
+                ? ` (${[requestSummary.make, requestSummary.model].filter(Boolean).join(" ")})`
+                : ""}
+            </p>
+          </div>
+        )}
         <p className="tech-label">Contribute</p>
         <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">Upload a file</h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
