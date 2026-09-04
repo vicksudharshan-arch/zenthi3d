@@ -477,6 +477,62 @@ function UploadPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-10">
+          {requestId && (
+            <fieldset className="space-y-4">
+              <legend className="tech-label mb-4 text-brass">00 — Who can see this file?</legend>
+              <div className="grid gap-3">
+                {(
+                  [
+                    [
+                      "private",
+                      "Private — only visible to the requester",
+                      "Stays out of the public library and search. The requester can reveal a download link from their request card.",
+                    ],
+                    [
+                      "public_reviewed",
+                      "Public — goes through normal review",
+                      "Queued for a quick check. It appears in the library and fulfils the request once approved.",
+                    ],
+                    [
+                      "public_auto",
+                      "Public — publish immediately, skip review",
+                      "Skips review — your submission goes live immediately without a check.",
+                    ],
+                  ] as const
+                ).map(([value, label, help]) => (
+                  <label
+                    key={value}
+                    className={
+                      "flex cursor-pointer items-start gap-3 rounded-sm border p-4 text-sm transition-colors " +
+                      (visibility === value
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:border-ring")
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="visibility"
+                      value={value}
+                      checked={visibility === value}
+                      onChange={() => setVisibility(value)}
+                      className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
+                    />
+                    <span>
+                      {label}
+                      <span
+                        className={
+                          "mt-1 block text-xs leading-relaxed " +
+                          (value === "public_auto" ? "text-brass" : "text-muted-foreground")
+                        }
+                      >
+                        {help}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <fieldset className="space-y-4">
             <legend className="tech-label mb-4 text-brass">01 — Where is this file from?</legend>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
