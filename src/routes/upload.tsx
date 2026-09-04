@@ -12,6 +12,8 @@ import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
+  LICENSE_OPTIONS,
+  NO_DERIVATIVE_LICENSES,
   RESTRICTED_MAKE_MESSAGE,
   SAFETY_SENSITIVE_CATEGORIES,
   emptyVehicle,
@@ -51,7 +53,7 @@ const fileCls =
   fieldCls +
   " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground";
 
-type Origin = "zenthi" | "external";
+type Origin = "zenthi" | "external" | "modified";
 
 type FileStatus = {
   status: "uploading" | "done" | "error";
@@ -156,6 +158,8 @@ function UploadPage() {
   const [sourceLink, setSourceLink] = useState("");
   const [licenseType, setLicenseType] = useState("");
   const [originalCreator, setOriginalCreator] = useState("");
+  const [originalLicense, setOriginalLicense] = useState("");
+  const [modificationNotes, setModificationNotes] = useState("");
 
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -289,6 +293,46 @@ function UploadPage() {
         return;
       }
     }
+    if (origin === "modified") {
+      if (!sourceLink.trim()) {
+        toast.error("Add the link to the original file you modified.");
+        return;
+      }
+      try {
+        new URL(sourceLink.trim());
+      } catch {
+        toast.error("The original source link doesn't look like a valid URL.");
+        return;
+      }
+      if (!originalCreator.trim()) {
+        toast.error("Add the original creator's name, or type 'Unknown'.");
+        return;
+      }
+      if (!originalLicense) {
+        toast.error("Select the license the original file was published under.");
+        return;
+      }
+      if (NO_DERIVATIVE_LICENSES.includes(originalLicense)) {
+        toast.error(
+          "This license doesn't permit modified/derivative versions to be shared. This file can't be uploaded as a modification.",
+        );
+        return;
+      }
+      if (originalLicense === "Other/Unsure") {
+        toast.error(
+          "We can't verify an unknown license. Confirm the original file's license before uploading a modified version.",
+        );
+        return;
+      }
+      if (!modificationNotes.trim()) {
+        toast.error("Describe what you changed from the original file.");
+        return;
+      }
+      if (originalLicense !== "CC BY-SA" && !licenseType) {
+        toast.error("Select the license for your modified version.");
+        return;
+      }
+    }
 
 
     setSubmitting(true);
@@ -330,9 +374,15 @@ function UploadPage() {
         stl_file_name: stlUploads[0]?.name ?? null,
         stl_file_size: stlUploads[0]?.size ?? null,
         extra_files: extras,
-        source_link: origin === "external" ? sourceLink.trim() : null,
-        license_type: origin === "external" ? licenseType : "CC BY",
-        original_creator: origin === "external" ? originalCreator.trim() : null,
+        source_link: origin === "zenthi" ? null : sourceLink.trim(),
+        license_type:
+          origin === "zenthi"
+            ? "CC BY"
+            : origin === "modified" && originalLicense === "CC BY-SA"
+              ? "CC BY-SA"
+              : licenseType,
+        original_creator: origin === "zenthi" ? null : originalCreator.trim(),
+        modification_notes: origin === "modified" ? modificationNotes.trim() : null,
 
         license_accepted: true,
         status: "pending",
@@ -392,11 +442,12 @@ function UploadPage() {
         <form onSubmit={handleSubmit} className="mt-12 space-y-10">
           <fieldset className="space-y-4">
             <legend className="tech-label mb-4 text-brass">01 — Where is this file from?</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {(
                 [
                   ["zenthi", "I made this / uploading directly to Zenthi"],
                   ["external", "This is from another site"],
+                  ["modified", "I modified someone else's file"],
                 ] as const
               ).map(([value, label]) => (
                 <label
@@ -418,6 +469,8 @@ function UploadPage() {
                       if (value === "zenthi") {
                         setSourceLink("");
                         setLicenseType("");
+                        setOriginalLicense("");
+                        setModificationNotes("");
                       }
                     }}
                     className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
@@ -465,6 +518,7 @@ function UploadPage() {
                     <option value="CC BY-SA">CC BY-SA</option>
                     <option value="CC BY-NC">CC BY-NC</option>
                     <option value="CC BY-ND">CC BY-ND</option>
+                    <option value="CC BY-NC-ND">CC BY-NC-ND</option>
                     <option value="Other/Unsure">Other/Unsure</option>
                   </select>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
@@ -487,6 +541,114 @@ function UploadPage() {
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     Enter the creator's name, or type "Unknown" if you don't know who made it.
                   </p>
+                </div>
+              </div>
+            )}
+
+            {origin === "modified" && (
+              <div className="grid gap-6 rounded-sm border border-border bg-secondary/50 p-4 sm:grid-cols-2">
+                <div>
+                  <label className={labelCls} htmlFor="sourceLink">
+                    Original source link
+                  </label>
+                  <input
+                    id="sourceLink"
+                    type="url"
+                    required
+                    value={sourceLink}
+                    onChange={(e) => setSourceLink(e.target.value)}
+                    placeholder="https://www.printables.com/model/…"
+                    className={fieldCls}
+                  />
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    Where the file you started from came from.
+                  </p>
+                </div>
+                <div>
+                  <label className={labelCls} htmlFor="originalCreator">
+                    Original creator
+                  </label>
+                  <input
+                    id="originalCreator"
+                    type="text"
+                    required
+                    value={originalCreator}
+                    onChange={(e) => setOriginalCreator(e.target.value)}
+                    placeholder="Creator name or handle"
+                    className={fieldCls}
+                  />
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    Enter the creator&apos;s name, or type &quot;Unknown&quot; if you don&apos;t
+                    know who made it.
+                  </p>
+                </div>
+                <div>
+                  <label className={labelCls} htmlFor="originalLicense">
+                    Original file&apos;s license
+                  </label>
+                  <select
+                    id="originalLicense"
+                    required
+                    value={originalLicense}
+                    onChange={(e) => {
+                      setOriginalLicense(e.target.value);
+                      if (e.target.value === "CC BY-SA") setLicenseType("CC BY-SA");
+                    }}
+                    className={fieldCls}
+                  >
+                    <option value="" disabled>
+                      Select license…
+                    </option>
+                    {LICENSE_OPTIONS.map((l) => (
+                      <option key={l} value={l}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    Licenses ending in ND don&apos;t allow modified versions to be shared.
+                  </p>
+                </div>
+                <div>
+                  <label className={labelCls} htmlFor="licenseType">
+                    License for your modified version
+                  </label>
+                  <select
+                    id="licenseType"
+                    required
+                    disabled={originalLicense === "CC BY-SA"}
+                    value={originalLicense === "CC BY-SA" ? "CC BY-SA" : licenseType}
+                    onChange={(e) => setLicenseType(e.target.value)}
+                    className={fieldCls + " disabled:opacity-60"}
+                  >
+                    <option value="" disabled>
+                      Select license…
+                    </option>
+                    {LICENSE_OPTIONS.filter((l) => l !== "Other/Unsure").map((l) => (
+                      <option key={l} value={l}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {originalLicense === "CC BY-SA"
+                      ? "ShareAlike carries forward — your version stays CC BY-SA."
+                      : "Keep it at least as restrictive as the original file's license."}
+                  </p>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={labelCls} htmlFor="modificationNotes">
+                    What did you change?
+                  </label>
+                  <textarea
+                    id="modificationNotes"
+                    required
+                    rows={3}
+                    value={modificationNotes}
+                    onChange={(e) => setModificationNotes(e.target.value)}
+                    placeholder="Scaled up 10%, added a mounting tab, thicker walls for PETG…"
+                    className={fieldCls}
+                  />
                 </div>
               </div>
             )}
@@ -817,7 +979,7 @@ function UploadPage() {
             <div>
               <span className={labelCls} id="contributorType-label">
                 You are a… (select all that apply)
-                {origin === "external" && " — optional"}
+                {origin !== "zenthi" && " — optional"}
               </span>
               <div
                 role="group"
@@ -850,7 +1012,7 @@ function UploadPage() {
               </div>
               {contributorTypes.length === 0 && (
                 <p className="mt-2 font-mono text-xs text-muted-foreground">
-                  {origin === "external"
+                  {origin !== "zenthi"
                     ? "Optional when reuploading someone else's work."
                     : "Pick at least one tag."}
                 </p>

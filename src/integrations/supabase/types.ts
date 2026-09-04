@@ -83,6 +83,7 @@ export type Database = {
           license_accepted: boolean
           license_type: string | null
           material: string | null
+          modification_notes: string | null
           name: string
           notes: string | null
           oem_part_numbers: string | null
@@ -115,6 +116,7 @@ export type Database = {
           license_accepted?: boolean
           license_type?: string | null
           material?: string | null
+          modification_notes?: string | null
           name: string
           notes?: string | null
           oem_part_numbers?: string | null
@@ -147,6 +149,7 @@ export type Database = {
           license_accepted?: boolean
           license_type?: string | null
           material?: string | null
+          modification_notes?: string | null
           name?: string
           notes?: string | null
           oem_part_numbers?: string | null
