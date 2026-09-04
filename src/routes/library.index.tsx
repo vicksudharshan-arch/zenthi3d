@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { PartPreviewModal, type PreviewTarget } from "@/components/part-preview-modal";
 import {
-  ExtraDownloadButtons,
+  FileActionButtons,
   FormatBadges,
   PartNumbers,
   ReferenceOnlyBadge,
@@ -17,8 +17,9 @@ import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPE_LABELS,
   parseAftermarket,
-  parseExtraFiles,
+  partFileEntries,
   type AftermarketPartNumber,
+  type FileGroup,
   type Category,
   vehicleDetailLabel,
   vehicleLabel,
@@ -69,6 +70,8 @@ type Part = {
   oem_part_numbers: string | null;
   aftermarket_part_numbers: AftermarketPartNumber[];
   extra_files: { kind: string; path: string; name: string; size: number }[];
+  step_files: { path: string; name: string; size: number }[];
+  stl_files: { path: string; name: string; size: number }[];
   notes: string | null;
   uploader_name: string | null;
   step_file_name: string | null;
@@ -80,7 +83,7 @@ type Part = {
 };
 
 const PART_COLUMNS =
-  "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,original_creator,created_at";
+  "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,step_files,stl_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,original_creator,created_at";
 
 const VEHICLE_FILTERS = [
   { key: "engineMake", label: "engine makes", placeholder: "All engine makes" },
@@ -110,8 +113,8 @@ function LibraryPage() {
     part: {
       id: string;
       name: string;
-      step_file_name: string | null;
-      stl_file_name: string | null;
+      step_files: unknown;
+      stl_files: unknown;
       extra_files: unknown;
     };
     target?: PreviewTarget;
@@ -201,11 +204,11 @@ function LibraryPage() {
     return true;
   });
 
-  async function download(id: string, format: "step" | "stl" | "extra", extraIndex?: number) {
-    const key = format === "extra" ? `${id}:extra:${extraIndex}` : `${id}:${format}`;
+  async function download(id: string, format: FileGroup, index: number) {
+    const key = `${id}:${format}:${index}`;
     setDownloading(key);
     try {
-      const { url } = await getDownloadUrl({ data: { id, format, ...(extraIndex !== undefined ? { extraIndex } : {}) } });
+      const { url } = await getDownloadUrl({ data: { id, format, index } });
       window.location.href = url;
     } catch {
       toast.error("Could not generate a download link.");
@@ -360,7 +363,7 @@ function LibraryPage() {
         ) : (
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {filtered.map((p) => {
-              const extras = parseExtraFiles(p.extra_files);
+              const fileEntries = partFileEntries(p);
               return (
                 <article
                   key={p.id}
@@ -370,8 +373,8 @@ function LibraryPage() {
                       part: {
                         id: p.id,
                         name: p.name,
-                        step_file_name: p.step_file_name,
-                        stl_file_name: p.stl_file_name,
+                        step_files: p.step_files,
+                        stl_files: p.stl_files,
                         extra_files: p.extra_files,
                       },
                     })
@@ -507,8 +510,8 @@ function LibraryPage() {
                             part: {
                               id: p.id,
                               name: p.name,
-                              step_file_name: p.step_file_name,
-                              stl_file_name: p.stl_file_name,
+                              step_files: p.step_files,
+                              stl_files: p.stl_files,
                               extra_files: p.extra_files,
                             },
                           })
@@ -554,45 +557,27 @@ function LibraryPage() {
                       >
                         Delete
                       </button>
-                      {p.step_file_name && (
-                        <button
-                          onClick={() => download(p.id, "step")}
-                          disabled={downloading === `${p.id}:step`}
-                          className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                        >
-                          {downloading === `${p.id}:step` ? "Preparing…" : "Download STEP"}
-                        </button>
-                      )}
-                      {p.stl_file_name && (
-                        <button
-                          onClick={() => download(p.id, "stl")}
-                          disabled={downloading === `${p.id}:stl`}
-                          className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
-                        >
-                          {downloading === `${p.id}:stl` ? "Preparing…" : "Download STL"}
-                        </button>
-                      )}
-                      <ExtraDownloadButtons
-                        extras={extras}
-                        onDownload={(i) => download(p.id, "extra", i)}
-                        onPreview={(i) =>
+                      <FileActionButtons
+                        entries={fileEntries}
+                        onDownload={(group, i) => download(p.id, group, i)}
+                        onPreview={(entry) =>
                           setPreview({
                             part: {
                               id: p.id,
                               name: p.name,
-                              step_file_name: p.step_file_name,
-                              stl_file_name: p.stl_file_name,
+                              step_files: p.step_files,
+                              stl_files: p.stl_files,
                               extra_files: p.extra_files,
                             },
                             target: {
-                              format: "extra",
-                              extraIndex: i,
-                              fileName: extras[i]!.name,
+                              format: entry.group,
+                              index: entry.index,
+                              fileName: entry.name,
                             },
                           })
                         }
                         busyKey={
-                          downloading?.startsWith(`${p.id}:extra:`)
+                          downloading?.startsWith(`${p.id}:`)
                             ? downloading.slice(p.id.length + 1)
                             : null
                         }
