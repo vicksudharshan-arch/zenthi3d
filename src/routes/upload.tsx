@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getRequestSummary } from "@/lib/requests.functions";
+import { finalizeRequestFulfillment, getRequestSummary } from "@/lib/requests.functions";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import {
@@ -165,6 +165,7 @@ function UploadPage() {
   const [stlFiles, setStlFiles] = useState<File[]>([]);
   const [extraFiles, setExtraFiles] = useState<File[]>([]);
   const [origin, setOrigin] = useState<Origin>("zenthi");
+  const [visibility, setVisibility] = useState<Visibility>("public_reviewed");
   const [sourceLink, setSourceLink] = useState("");
   const [licenseType, setLicenseType] = useState("");
   const [originalCreator, setOriginalCreator] = useState("");
@@ -174,6 +175,7 @@ function UploadPage() {
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [submittedStatus, setSubmittedStatus] = useState<string>("pending");
   const [statuses, setStatuses] = useState<Record<string, FileStatus>>({});
   const uploadedRef = useRef<Record<string, string>>({});
 
@@ -361,7 +363,15 @@ function UploadPage() {
         extras.push({ kind, path: await uploadFile(file, "extra"), name: file.name, size: file.size });
       }
 
-      const { error } = await supabase.from("parts").insert({
+      const submissionStatus = requestId
+        ? visibility === "private"
+          ? "private_fulfillment"
+          : visibility === "public_auto"
+            ? "approved"
+            : "pending"
+        : "pending";
+
+      const { data: inserted, error } = await supabase.from("parts").insert({
         request_id: requestId ?? null,
         name: name.trim(),
         description: description.trim(),
@@ -396,9 +406,13 @@ function UploadPage() {
         modification_notes: origin === "modified" ? modificationNotes.trim() : null,
 
         license_accepted: true,
-        status: "pending",
-      });
+        status: submissionStatus,
+      }).select("id").maybeSingle();
       if (error) throw error;
+      if (requestId && inserted?.id && submissionStatus !== "pending") {
+        await finalizeRequestFulfillment({ data: { requestId, partId: inserted.id } });
+      }
+      setSubmittedStatus(submissionStatus);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
