@@ -429,11 +429,18 @@ function UploadPage() {
         <div className="mx-auto w-full max-w-2xl px-5 py-28 text-center">
           <p className="tech-label">Submission received</p>
           <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight">
-            Thanks — this is queued for a quick review before it goes live.
+            {submittedStatus === "private_fulfillment"
+              ? "Thanks — sent privately to the requester."
+              : submittedStatus === "approved"
+                ? "Thanks — your file is live."
+                : "Thanks — this is queued for a quick review before it goes live."}
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-            We check that the fitment details make sense and that the attribution is in order. Once
-            approved it appears in the public library.
+            {submittedStatus === "private_fulfillment"
+              ? "It stays out of the public library and search. The request is now marked fulfilled, and the requester can reveal the download from their request card."
+              : submittedStatus === "approved"
+                ? "It's in the public library now and the request is marked fulfilled."
+                : "We check that the fitment details make sense and that the attribution is in order. Once approved it appears in the public library."}
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Link
