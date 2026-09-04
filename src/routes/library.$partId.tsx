@@ -247,11 +247,7 @@ function PartDetailPage() {
                     Source ↗
                   </a>
                 )}
-                {data.license_type && (
-                  <span className="rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground">
-                    {data.license_type}
-                  </span>
-                )}
+                <LicenseBadge license={data.license_type} />
               </p>
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <button
