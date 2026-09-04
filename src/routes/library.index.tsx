@@ -10,6 +10,7 @@ import {
   FormatBadges,
   PartNumbers,
   ReferenceOnlyBadge,
+  LicenseBadge,
 } from "@/components/part-meta";
 import { supabase } from "@/integrations/supabase/client";
 import {
