@@ -53,6 +53,32 @@ const fileCls =
 
 type Origin = "zenthi" | "external";
 
+function SelectedFileList({ files, onRemove }: { files: File[]; onRemove: (i: number) => void }) {
+  if (files.length === 0) return null;
+  return (
+    <ul className="space-y-2">
+      {files.map((f, i) => (
+        <li
+          key={`${f.name}-${f.size}-${i}`}
+          className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background px-3 py-2"
+        >
+          <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
+          <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
+            {(f.size / 1024).toFixed(0)} KB
+          </span>
+          <button
+            type="button"
+            onClick={() => onRemove(i)}
+            className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+          >
+            Remove
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function UploadPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -69,8 +95,8 @@ function UploadPage() {
     { brand: "", number: "" },
   ]);
   const [notes, setNotes] = useState("");
-  const [stepFile, setStepFile] = useState<File | null>(null);
-  const [stlFile, setStlFile] = useState<File | null>(null);
+  const [stepFiles, setStepFiles] = useState<File[]>([]);
+  const [stlFiles, setStlFiles] = useState<File[]>([]);
   const [extraFiles, setExtraFiles] = useState<File[]>([]);
   const [origin, setOrigin] = useState<Origin>("zenthi");
   const [sourceLink, setSourceLink] = useState("");
@@ -81,7 +107,7 @@ function UploadPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
-  const hasAnyFile = !!stepFile || !!stlFile || extraFiles.length > 0;
+  const hasAnyFile = stepFiles.length > 0 || stlFiles.length > 0 || extraFiles.length > 0;
   const encourageReference = SAFETY_SENSITIVE_CATEGORIES.includes(category);
 
   async function uploadFile(f: File) {
@@ -101,12 +127,13 @@ function UploadPage() {
       toast.error("Attach at least one file — STEP is recommended, but any supported type works.");
       return;
     }
-    const stepExt = stepFile?.name.split(".").pop()?.toLowerCase() ?? "";
-    if (stepFile && !["step", "stp"].includes(stepExt)) {
+    if (
+      stepFiles.some((f) => !["step", "stp"].includes(f.name.split(".").pop()?.toLowerCase() ?? ""))
+    ) {
       toast.error("The STEP field only accepts .step or .stp files.");
       return;
     }
-    if (stlFile && stlFile.name.split(".").pop()?.toLowerCase() !== "stl") {
+    if (stlFiles.some((f) => f.name.split(".").pop()?.toLowerCase() !== "stl")) {
       toast.error("The STL field only accepts .stl files.");
       return;
     }
@@ -149,8 +176,14 @@ function UploadPage() {
 
     setSubmitting(true);
     try {
-      const stepPath = stepFile ? await uploadFile(stepFile) : null;
-      const stlPath = stlFile ? await uploadFile(stlFile) : null;
+      const stepUploads = [];
+      for (const file of stepFiles) {
+        stepUploads.push({ path: await uploadFile(file), name: file.name, size: file.size });
+      }
+      const stlUploads = [];
+      for (const file of stlFiles) {
+        stlUploads.push({ path: await uploadFile(file), name: file.name, size: file.size });
+      }
       const extras = [];
       for (const file of extraFiles) {
         const kind = file.name.split(".").pop()?.toLowerCase() ?? "file";
@@ -171,12 +204,14 @@ function UploadPage() {
         aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
         notes: notes.trim() || null,
         uploader_name: uploader.trim() || null,
-        step_file_path: stepPath,
-        step_file_name: stepFile?.name ?? null,
-        step_file_size: stepFile?.size ?? null,
-        stl_file_path: stlPath,
-        stl_file_name: stlFile?.name ?? null,
-        stl_file_size: stlFile?.size ?? null,
+        step_files: stepUploads,
+        stl_files: stlUploads,
+        step_file_path: stepUploads[0]?.path ?? null,
+        step_file_name: stepUploads[0]?.name ?? null,
+        step_file_size: stepUploads[0]?.size ?? null,
+        stl_file_path: stlUploads[0]?.path ?? null,
+        stl_file_name: stlUploads[0]?.name ?? null,
+        stl_file_size: stlUploads[0]?.size ?? null,
         extra_files: extras,
         source_link: origin === "external" ? sourceLink.trim() : null,
         license_type: origin === "external" ? licenseType : "CC BY",
@@ -513,37 +548,63 @@ function UploadPage() {
               the other way around. Scans, cutting files and 2D drawings are welcome too. Attach at
               least one file of any supported type to submit.
             </p>
-            <div>
-              <label className={labelCls} htmlFor="stepFile">
-                STEP file (recommended)
-              </label>
-              <input
-                id="stepFile"
-                type="file"
-                accept=".step,.stp,application/step"
-                onChange={(e) => setStepFile(e.target.files?.[0] ?? null)}
-                className={fileCls}
-              />
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Editable CAD. This is what most machine shops need, and lets others modify the
-                design for their own fit.
-              </p>
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls} htmlFor="stepFile">
+                  STEP files (recommended)
+                </label>
+                <input
+                  id="stepFile"
+                  type="file"
+                  multiple
+                  accept=".step,.stp,application/step"
+                  onChange={(e) => {
+                    const picked = Array.from(e.target.files ?? []);
+                    setStepFiles((s) => [
+                      ...s,
+                      ...picked.filter(
+                        (f) => !s.some((x) => x.name === f.name && x.size === f.size),
+                      ),
+                    ]);
+                    e.target.value = "";
+                  }}
+                  className={fileCls}
+                />
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  Editable CAD. This is what most machine shops need, and lets others modify the
+                  design for their own fit. Select several at once if the part has multiple pieces.
+                </p>
+              </div>
+              <SelectedFileList files={stepFiles} onRemove={(i) => setStepFiles((s) => s.filter((_, idx) => idx !== i))} />
             </div>
-            <div>
-              <label className={labelCls} htmlFor="stlFile">
-                STL file (optional)
-              </label>
-              <input
-                id="stlFile"
-                type="file"
-                accept=".stl,model/stl"
-                onChange={(e) => setStlFile(e.target.files?.[0] ?? null)}
-                className={fileCls}
-              />
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Ready-to-print mesh file. Works if that's all you have, but it can't be easily
-                edited like STEP can.
-              </p>
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls} htmlFor="stlFile">
+                  STL files (optional)
+                </label>
+                <input
+                  id="stlFile"
+                  type="file"
+                  multiple
+                  accept=".stl,model/stl"
+                  onChange={(e) => {
+                    const picked = Array.from(e.target.files ?? []);
+                    setStlFiles((s) => [
+                      ...s,
+                      ...picked.filter(
+                        (f) => !s.some((x) => x.name === f.name && x.size === f.size),
+                      ),
+                    ]);
+                    e.target.value = "";
+                  }}
+                  className={fileCls}
+                />
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  Ready-to-print mesh files. They work if that's all you have, but can't be easily
+                  edited like STEP can. Select several at once.
+                </p>
+              </div>
+              <SelectedFileList files={stlFiles} onRemove={(i) => setStlFiles((s) => s.filter((_, idx) => idx !== i))} />
             </div>
 
             <div className="space-y-4 rounded-sm border border-border bg-secondary/50 p-4">
@@ -571,28 +632,10 @@ function UploadPage() {
                   Select several at once.
                 </p>
               </div>
-              {extraFiles.length > 0 && (
-                <ul className="space-y-2">
-                  {extraFiles.map((f, i) => (
-                    <li
-                      key={`${f.name}-${f.size}-${i}`}
-                      className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background px-3 py-2"
-                    >
-                      <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
-                      <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
-                        {(f.size / 1024).toFixed(0)} KB
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setExtraFiles((s) => s.filter((_, idx) => idx !== i))}
-                        className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <SelectedFileList
+                files={extraFiles}
+                onRemove={(i) => setExtraFiles((s) => s.filter((_, idx) => idx !== i))}
+              />
             </div>
 
             {!hasAnyFile && (
