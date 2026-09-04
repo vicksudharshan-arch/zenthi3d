@@ -28,9 +28,8 @@ import {
 
 
 export const Route = createFileRoute("/upload")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    requestId: typeof search["requestId"] === "string" ? (search["requestId"] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { requestId?: string } =>
+    typeof search["requestId"] === "string" ? { requestId: search["requestId"] } : {},
   head: () => ({
     meta: [
       { title: "Upload a part file — Zenthi" },
