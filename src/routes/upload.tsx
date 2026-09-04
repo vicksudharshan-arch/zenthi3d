@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import {
@@ -295,16 +295,16 @@ function UploadPage() {
     try {
       const stepUploads = [];
       for (const file of stepFiles) {
-        stepUploads.push({ path: await uploadFile(file), name: file.name, size: file.size });
+        stepUploads.push({ path: await uploadFile(file, "step"), name: file.name, size: file.size });
       }
       const stlUploads = [];
       for (const file of stlFiles) {
-        stlUploads.push({ path: await uploadFile(file), name: file.name, size: file.size });
+        stlUploads.push({ path: await uploadFile(file, "stl"), name: file.name, size: file.size });
       }
       const extras = [];
       for (const file of extraFiles) {
         const kind = file.name.split(".").pop()?.toLowerCase() ?? "file";
-        extras.push({ kind, path: await uploadFile(file), name: file.name, size: file.size });
+        extras.push({ kind, path: await uploadFile(file, "extra"), name: file.name, size: file.size });
       }
 
       const { error } = await supabase.from("parts").insert({
@@ -695,7 +695,13 @@ function UploadPage() {
                   design for their own fit. Select several at once if the part has multiple pieces.
                 </p>
               </div>
-              <SelectedFileList files={stepFiles} onRemove={(i) => setStepFiles((s) => s.filter((_, idx) => idx !== i))} />
+              <SelectedFileList
+                files={stepFiles}
+                group="step"
+                statuses={statuses}
+                onRetry={retryFile}
+                onRemove={(i) => setStepFiles((s) => s.filter((_, idx) => idx !== i))}
+              />
             </div>
             <div className="space-y-4">
               <div>
@@ -729,7 +735,13 @@ function UploadPage() {
                 </p>
 
               </div>
-              <SelectedFileList files={stlFiles} onRemove={(i) => setStlFiles((s) => s.filter((_, idx) => idx !== i))} />
+              <SelectedFileList
+                files={stlFiles}
+                group="stl"
+                statuses={statuses}
+                onRetry={retryFile}
+                onRemove={(i) => setStlFiles((s) => s.filter((_, idx) => idx !== i))}
+              />
             </div>
 
             <div className="space-y-4 rounded-sm border border-border bg-secondary/50 p-4">
@@ -759,6 +771,9 @@ function UploadPage() {
               </div>
               <SelectedFileList
                 files={extraFiles}
+                group="extra"
+                statuses={statuses}
+                onRetry={retryFile}
                 onRemove={(i) => setExtraFiles((s) => s.filter((_, idx) => idx !== i))}
               />
             </div>
