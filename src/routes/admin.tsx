@@ -225,7 +225,7 @@ function AdminPage() {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t} ({(data ?? []).filter((p) => p.status === t).length})
+              {t.replace("_", " ")} ({(data ?? []).filter((p) => p.status === t).length})
             </button>
           ))}
         </div>

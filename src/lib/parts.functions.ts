@@ -55,7 +55,7 @@ export const listAllParts = createServerFn({ method: "GET" }).handler(async () =
 
 export const setPartStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ id: z.string(), status: z.enum(["approved", "rejected", "pending"]) }).parse(input),
+    z.object({ id: z.string(), status: z.enum(["approved", "rejected", "pending", "private_fulfillment"]) }).parse(input),
   )
   .handler(async ({ data }) => {
     const { requireAdminUnlocked } = await import("./admin-gate.server");
