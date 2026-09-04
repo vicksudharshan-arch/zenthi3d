@@ -461,9 +461,7 @@ function LibraryPage() {
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
                     <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                       <span>
-                        {[p.step_file_name, p.stl_file_name, ...extras.map((f) => f.name)]
-                          .filter(Boolean)
-                          .join(" · ")}
+                        {fileEntries.map((f) => f.name).join(" · ")}
                         {p.uploader_name ? ` · ${p.uploader_name}` : ""}
                       </span>
 
