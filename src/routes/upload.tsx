@@ -557,14 +557,17 @@ function UploadPage() {
                   id="stepFile"
                   type="file"
                   multiple
-                  accept=".step,.stp,application/step"
                   onChange={(e) => {
                     const picked = Array.from(e.target.files ?? []);
+                    const ok = picked.filter((f) =>
+                      ["step", "stp"].includes(f.name.split(".").pop()?.toLowerCase() ?? ""),
+                    );
+                    if (ok.length < picked.length) {
+                      toast.error("The STEP field only accepts .step or .stp files.");
+                    }
                     setStepFiles((s) => [
                       ...s,
-                      ...picked.filter(
-                        (f) => !s.some((x) => x.name === f.name && x.size === f.size),
-                      ),
+                      ...ok.filter((f) => !s.some((x) => x.name === f.name && x.size === f.size)),
                     ]);
                     e.target.value = "";
                   }}
@@ -586,14 +589,17 @@ function UploadPage() {
                   id="stlFile"
                   type="file"
                   multiple
-                  accept=".stl,model/stl"
                   onChange={(e) => {
                     const picked = Array.from(e.target.files ?? []);
+                    const ok = picked.filter(
+                      (f) => (f.name.split(".").pop()?.toLowerCase() ?? "") === "stl",
+                    );
+                    if (ok.length < picked.length) {
+                      toast.error("The STL field only accepts .stl files.");
+                    }
                     setStlFiles((s) => [
                       ...s,
-                      ...picked.filter(
-                        (f) => !s.some((x) => x.name === f.name && x.size === f.size),
-                      ),
+                      ...ok.filter((f) => !s.some((x) => x.name === f.name && x.size === f.size)),
                     ]);
                     e.target.value = "";
                   }}
@@ -601,8 +607,10 @@ function UploadPage() {
                 />
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                   Ready-to-print mesh files. They work if that's all you have, but can't be easily
-                  edited like STEP can. Select several at once.
+                  edited like STEP can. Select several at once. If your device greys out files in the
+                  picker, all file types are now selectable — the extension is checked here instead.
                 </p>
+
               </div>
               <SelectedFileList files={stlFiles} onRemove={(i) => setStlFiles((s) => s.filter((_, idx) => idx !== i))} />
             </div>
