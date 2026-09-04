@@ -79,6 +79,8 @@ export type Database = {
           created_at: string
           description: string
           extra_files: Json
+          step_files: Json
+          stl_files: Json
           id: string
           license_accepted: boolean
           license_type: string | null
@@ -111,6 +113,8 @@ export type Database = {
           created_at?: string
           description?: string
           extra_files?: Json
+          step_files?: Json
+          stl_files?: Json
           id?: string
           license_accepted?: boolean
           license_type?: string | null
@@ -143,6 +147,8 @@ export type Database = {
           created_at?: string
           description?: string
           extra_files?: Json
+          step_files?: Json
+          stl_files?: Json
           id?: string
           license_accepted?: boolean
           license_type?: string | null

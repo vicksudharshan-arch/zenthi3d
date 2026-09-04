@@ -15,7 +15,7 @@ import {
   CONTRIBUTOR_TYPE_LABELS,
   emptyVehicle,
   parseAftermarket,
-  parseExtraFiles,
+  partFileEntries,
   vehicleDetailLabel,
   vehicleLabel,
   type Category,
@@ -280,12 +280,8 @@ function AdminPage() {
                       </h2>
                       <p className="mt-1 font-mono text-xs text-muted-foreground">
                         {CATEGORY_LABELS[p.category as Category] ?? p.category} ·{" "}
-                        {[
-                          p.step_file_name,
-                          p.stl_file_name,
-                          ...parseExtraFiles(p.extra_files).map((f) => f.name),
-                        ]
-                          .filter(Boolean)
+                        {partFileEntries(p)
+                          .map((f) => f.name)
                           .join(" · ")}{" "}
                         · {new Date(p.created_at).toLocaleDateString()}
                         {p.uploader_name ? ` · ${p.uploader_name}` : ""}
