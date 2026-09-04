@@ -890,20 +890,27 @@ function UploadPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               type="submit"
               disabled={!licensed || submitting || !hasAnyFile}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {submitting ? "Uploading…" : "Submit for review"}
+              {submitting ? "Uploading…" : hasFailures ? "Retry & submit" : "Submit for review"}
             </button>
             {!licensed && (
               <p className="font-mono text-xs text-muted-foreground">
                 Accept the license terms to submit.
               </p>
             )}
+            {hasFailures && !submitting && (
+              <p className="font-mono text-xs text-destructive">
+                Some files didn't upload. Retry them above, or submit again — files that already
+                uploaded won't be sent twice.
+              </p>
+            )}
           </div>
+
         </form>
       </div>
     </SiteShell>
