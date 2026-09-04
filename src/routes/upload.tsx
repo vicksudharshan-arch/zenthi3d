@@ -53,31 +53,85 @@ const fileCls =
 
 type Origin = "zenthi" | "external";
 
-function SelectedFileList({ files, onRemove }: { files: File[]; onRemove: (i: number) => void }) {
+type FileStatus = {
+  status: "uploading" | "done" | "error";
+  pct: number;
+  error?: string;
+};
+
+export const fileKey = (group: string, f: File) => `${group}:${f.name}:${f.size}`;
+
+function SelectedFileList({
+  files,
+  group,
+  statuses,
+  onRemove,
+  onRetry,
+}: {
+  files: File[];
+  group: string;
+  statuses: Record<string, FileStatus>;
+  onRemove: (i: number) => void;
+  onRetry: (f: File, group: string) => void;
+}) {
   if (files.length === 0) return null;
   return (
     <ul className="space-y-2">
-      {files.map((f, i) => (
-        <li
-          key={`${f.name}-${f.size}-${i}`}
-          className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background px-3 py-2"
-        >
-          <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
-          <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
-            {(f.size / 1024).toFixed(0)} KB
-          </span>
-          <button
-            type="button"
-            onClick={() => onRemove(i)}
-            className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+      {files.map((f, i) => {
+        const st = statuses[fileKey(group, f)];
+        return (
+          <li
+            key={`${f.name}-${f.size}-${i}`}
+            className="rounded-sm border border-border bg-background px-3 py-2"
           >
-            Remove
-          </button>
-        </li>
-      ))}
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
+              <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
+                {(f.size / 1024).toFixed(0)} KB
+              </span>
+              {st?.status === "error" ? (
+                <button
+                  type="button"
+                  onClick={() => onRetry(f, group)}
+                  className="font-mono text-[0.65rem] tracking-widest text-primary uppercase hover:underline"
+                >
+                  Retry
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+              >
+                Remove
+              </button>
+            </div>
+            {st ? (
+              <div className="mt-2">
+                <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className={`h-full transition-all ${
+                      st.status === "error" ? "bg-destructive" : "bg-primary"
+                    }`}
+                    style={{ width: `${st.status === "done" ? 100 : st.pct}%` }}
+                  />
+                </div>
+                <p className="mt-1 font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
+                  {st.status === "done"
+                    ? "Uploaded"
+                    : st.status === "error"
+                      ? `Failed — ${st.error ?? "network error"}`
+                      : `Uploading ${st.pct}%`}
+                </p>
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
+
 
 function UploadPage() {
   const [name, setName] = useState("");
