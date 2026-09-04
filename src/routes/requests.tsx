@@ -134,12 +134,12 @@ function RequestsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return toast.error("Add your name or handle.");
-    if (!description.trim()) return toast.error("Describe the part you need.");
-    if (isRestrictedMake(make)) return toast.error(RESTRICTED_MAKE_MESSAGE);
+    if (!name.trim()) { toast.error("Add your name or handle."); return; }
+    if (!description.trim()) { toast.error("Describe the part you need."); return; }
+    if (isRestrictedMake(make)) { toast.error(RESTRICTED_MAKE_MESSAGE); return; }
     const bountyValue = bounty.trim() ? Number(bounty.trim()) : null;
     if (bountyValue !== null && (Number.isNaN(bountyValue) || bountyValue < 0))
-      return toast.error("Bounty must be a positive number.");
+      { toast.error("Bounty must be a positive number."); return; }
 
     setSubmitting(true);
     try {
@@ -553,7 +553,7 @@ function ReopenDialog({
   const [busy, setBusy] = useState(false);
 
   async function confirm() {
-    if (!claim.trim()) return toast.error("Enter the name you posted this request with.");
+    if (!claim.trim()) { toast.error("Enter the name you posted this request with."); return; }
     setBusy(true);
     try {
       const res = await reopenRequest({ data: { id: request.id, requesterName: claim } });
