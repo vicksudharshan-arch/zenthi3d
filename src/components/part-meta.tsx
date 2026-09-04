@@ -1,6 +1,7 @@
 import {
   PREVIEWABLE_EXTS,
   parseAftermarket,
+  licenseUrl,
   partFileEntries,
   type AftermarketPartNumber,
   type FileGroup,
@@ -137,5 +138,24 @@ export function FileActionButtons({
         );
       })}
     </>
+  );
+}
+
+/** License badge — links to the license text when we know the URL. */
+export function LicenseBadge({ license }: { license: string | null | undefined }) {
+  if (!license) return null;
+  const url = licenseUrl(license);
+  const cls =
+    "rounded-sm bg-brass/15 px-2 py-0.5 text-[0.65rem] tracking-wide text-brass-foreground";
+  if (!url) return <span className={cls}>{license}</span>;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer license"
+      className={cls + " underline decoration-dotted underline-offset-2 hover:text-primary"}
+    >
+      {license} ↗
+    </a>
   );
 }
