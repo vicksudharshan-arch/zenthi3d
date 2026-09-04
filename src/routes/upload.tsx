@@ -160,19 +160,82 @@ function UploadPage() {
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [statuses, setStatuses] = useState<Record<string, FileStatus>>({});
+  const uploadedRef = useRef<Record<string, string>>({});
 
   const hasAnyFile = stepFiles.length > 0 || stlFiles.length > 0 || extraFiles.length > 0;
   const encourageReference = SAFETY_SENSITIVE_CATEGORIES.includes(category);
+  const hasFailures = Object.values(statuses).some((s) => s.status === "error");
 
-  async function uploadFile(f: File) {
+  function setStatus(key: string, next: FileStatus) {
+    setStatuses((s) => ({ ...s, [key]: next }));
+  }
+
+  /** Uploads via XHR so we get real progress events; caches the path so retries
+   *  only re-send files that actually failed. */
+  function uploadFile(f: File, group: string) {
+    const key = fileKey(group, f);
+    const cached = uploadedRef.current[key];
+    if (cached) {
+      setStatus(key, { status: "done", pct: 100 });
+      return Promise.resolve(cached);
+    }
     const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
     const path = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("part-files").upload(path, f, {
-      contentType: f.type || "application/octet-stream",
+    const url = `${import.meta.env["VITE_SUPABASE_URL"]}/storage/v1/object/part-files/${path}`;
+    const apiKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
+
+    setStatus(key, { status: "uploading", pct: 0 });
+
+    return new Promise<string>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("apikey", apiKey);
+      xhr.setRequestHeader("x-upsert", "false");
+      xhr.setRequestHeader("Content-Type", f.type || "application/octet-stream");
+      xhr.upload.onprogress = (ev) => {
+        if (!ev.lengthComputable) return;
+        setStatus(key, {
+          status: "uploading",
+          pct: Math.min(99, Math.round((ev.loaded / ev.total) * 100)),
+        });
+      };
+      const fail = (message: string) => {
+        setStatus(key, { status: "error", pct: 0, error: message });
+        reject(new Error(`${f.name}: ${message}`));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          uploadedRef.current[key] = path;
+          setStatus(key, { status: "done", pct: 100 });
+          resolve(path);
+        } else {
+          let message = `upload failed (${xhr.status})`;
+          try {
+            const body = JSON.parse(xhr.responseText) as { message?: string; error?: string };
+            message = body.message || body.error || message;
+          } catch {
+            /* keep default */
+          }
+          fail(message);
+        }
+      };
+      xhr.onerror = () => fail("network error");
+      xhr.ontimeout = () => fail("timed out");
+      xhr.onabort = () => fail("upload cancelled");
+      xhr.send(f);
     });
-    if (error) throw error;
-    return path;
   }
+
+  async function retryFile(f: File, group: string) {
+    try {
+      await uploadFile(f, group);
+      toast.success(`${f.name} uploaded — submit again to finish.`);
+    } catch {
+      toast.error(`${f.name} failed again. Check your connection and retry.`);
+    }
+  }
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
