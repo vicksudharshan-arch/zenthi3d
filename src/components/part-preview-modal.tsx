@@ -1,25 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getDownloadUrl } from "@/lib/parts.functions";
-import { parseExtraFiles } from "@/lib/parts";
+import { PREVIEWABLE_EXTS, fileExt, partFileEntries, type PartFileSource } from "@/lib/parts";
 
-type PreviewPart = {
+type PreviewPart = PartFileSource & {
   id: string;
   name: string;
-  step_file_name?: string | null;
-  stl_file_name?: string | null;
-  extra_files?: unknown;
 };
 
-export type PreviewTarget =
-  | { format: "step" | "stl" }
-  | { format: "extra"; extraIndex: number; fileName: string };
+export type PreviewTarget = {
+  format: "step" | "stl" | "extra";
+  index: number;
+  fileName: string;
+};
 
 const MESH_EXTS = ["stl", "obj", "ply"];
 const IMAGE_EXTS = ["svg"];
 const PDF_EXTS = ["pdf"];
 
 function extOf(name: string) {
-  return name.split(".").pop()?.toLowerCase() ?? "";
+  return fileExt(name);
 }
 
 export function PartPreviewModal({
@@ -37,26 +36,16 @@ export function PartPreviewModal({
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
   const resolved = useMemo(() => {
-    const extras = parseExtraFiles(part.extra_files);
+    const entries = partFileEntries(part);
     let t: PreviewTarget | undefined = target;
     if (!t) {
-      if (part.stl_file_name) t = { format: "stl" };
-      else {
-        const i = extras.findIndex((f) =>
-          [...MESH_EXTS, ...IMAGE_EXTS, ...PDF_EXTS].includes(extOf(f.name)),
-        );
-        t =
-          i >= 0
-            ? { format: "extra", extraIndex: i, fileName: extras[i]!.name }
-            : { format: "step" };
-      }
+      const previewable = entries.find((e) => PREVIEWABLE_EXTS.includes(e.ext));
+      const pick = previewable ?? entries[0];
+      t = pick
+        ? { format: pick.group, index: pick.index, fileName: pick.name }
+        : { format: "step", index: 0, fileName: "" };
     }
-    const fileName =
-      t.format === "extra"
-        ? t.fileName
-        : t.format === "stl"
-          ? (part.stl_file_name ?? "")
-          : (part.step_file_name ?? "");
+    const fileName = t.fileName;
     const ext = extOf(fileName);
     const kind = MESH_EXTS.includes(ext)
       ? "mesh"
@@ -89,10 +78,7 @@ export function PartPreviewModal({
 
     const fetchFile = async () => {
       const { url } = await getDownloadUrl({
-        data:
-          activeTarget.format === "extra"
-            ? { id: part.id, format: "extra", extraIndex: activeTarget.extraIndex }
-            : { id: part.id, format: activeTarget.format },
+        data: { id: part.id, format: activeTarget.format, index: activeTarget.index },
       });
       const res = await fetch(url);
       if (!res.ok) throw new Error("Could not fetch file");
