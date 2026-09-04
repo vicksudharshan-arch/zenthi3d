@@ -503,22 +503,6 @@ function LibraryPage() {
                         Details
                       </Link>
                       <button
-                        onClick={() =>
-                          setPreview({
-                            part: {
-                              id: p.id,
-                              name: p.name,
-                              step_files: p.step_files,
-                              stl_files: p.stl_files,
-                              extra_files: p.extra_files,
-                            },
-                          })
-                        }
-                        className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
-                      >
-                        Preview
-                      </button>
-                      <button
                         onClick={() => copyLink(p.id)}
                         className="inline-flex h-9 items-center rounded-sm border border-brass px-4 text-sm font-medium text-brass-foreground hover:bg-brass/15"
                       >
