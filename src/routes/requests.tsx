@@ -132,7 +132,7 @@ function RequestsPage() {
       (modelFilter === "all" || r.model === modelFilter),
   );
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     if (!name.trim()) { toast.error("Add your name or handle."); return; }
     if (!description.trim()) { toast.error("Describe the part you need."); return; }
@@ -552,7 +552,7 @@ function ReopenDialog({
   const [claim, setClaim] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function confirm() {
+  async function confirm(): Promise<void> {
     if (!claim.trim()) { toast.error("Enter the name you posted this request with."); return; }
     setBusy(true);
     try {
