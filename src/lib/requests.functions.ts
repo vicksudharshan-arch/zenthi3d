@@ -94,15 +94,15 @@ export const revealPrivateFulfillment = createServerFn({ method: "POST" })
     if (!part) throw new Error("That file is no longer available.");
 
     const list = (v: unknown) => (Array.isArray(v) ? (v as { path?: string; name?: string }[]) : []);
-    const entries = [
+    const entries: { path?: string; name?: string }[] = [
       ...list(part.step_files),
       ...list(part.stl_files),
       ...list(part.extra_files),
     ];
     if (!entries.length && part.step_file_path)
-      entries.push({ path: part.step_file_path, name: part.step_file_name ?? undefined });
+      entries.push({ path: part.step_file_path, ...(part.step_file_name ? { name: part.step_file_name } : {}) });
     if (!entries.length && part.stl_file_path)
-      entries.push({ path: part.stl_file_path, name: part.stl_file_name ?? undefined });
+      entries.push({ path: part.stl_file_path, ...(part.stl_file_name ? { name: part.stl_file_name } : {}) });
 
     const files: { name: string; url: string }[] = [];
     for (const entry of entries) {
