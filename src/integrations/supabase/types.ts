@@ -90,6 +90,7 @@ export type Database = {
           original_creator: string | null
           placement: string | null
           reference_only: boolean
+          request_id: string | null
           source_link: string | null
           status: string
           step_file_name: string | null
@@ -123,6 +124,7 @@ export type Database = {
           original_creator?: string | null
           placement?: string | null
           reference_only?: boolean
+          request_id?: string | null
           source_link?: string | null
           status?: string
           step_file_name?: string | null
@@ -156,6 +158,7 @@ export type Database = {
           original_creator?: string | null
           placement?: string | null
           reference_only?: boolean
+          request_id?: string | null
           source_link?: string | null
           status?: string
           step_file_name?: string | null
@@ -171,7 +174,89 @@ export type Database = {
           uploader_name?: string | null
           vehicles?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "parts_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          bounty_amount: number | null
+          created_at: string
+          drivetrain: string | null
+          engine_displacement: string | null
+          engine_manufacturer: string | null
+          engine_series: string | null
+          file_type_needed: string
+          fulfilled_part_id: string | null
+          generation: string | null
+          id: string
+          make: string | null
+          model: string | null
+          part_description: string
+          requester_contact: string | null
+          requester_name: string
+          status: string
+          updated_at: string
+          year_from: string | null
+          year_to: string | null
+        }
+        Insert: {
+          bounty_amount?: number | null
+          created_at?: string
+          drivetrain?: string | null
+          engine_displacement?: string | null
+          engine_manufacturer?: string | null
+          engine_series?: string | null
+          file_type_needed?: string
+          fulfilled_part_id?: string | null
+          generation?: string | null
+          id?: string
+          make?: string | null
+          model?: string | null
+          part_description: string
+          requester_contact?: string | null
+          requester_name: string
+          status?: string
+          updated_at?: string
+          year_from?: string | null
+          year_to?: string | null
+        }
+        Update: {
+          bounty_amount?: number | null
+          created_at?: string
+          drivetrain?: string | null
+          engine_displacement?: string | null
+          engine_manufacturer?: string | null
+          engine_series?: string | null
+          file_type_needed?: string
+          fulfilled_part_id?: string | null
+          generation?: string | null
+          id?: string
+          make?: string | null
+          model?: string | null
+          part_description?: string
+          requester_contact?: string | null
+          requester_name?: string
+          status?: string
+          updated_at?: string
+          year_from?: string | null
+          year_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_fulfilled_part_id_fkey"
+            columns: ["fulfilled_part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
