@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CopyrightPolicyRouteImport } from './routes/copyright-policy'
+import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as LibraryIndexRouteImport } from './routes/library.index'
 import { Route as LibraryPartIdRouteImport } from './routes/library.$partId'
@@ -29,6 +30,11 @@ const AdminRoute = AdminRouteImport.update({
 const CopyrightPolicyRoute = CopyrightPolicyRouteImport.update({
   id: '/copyright-policy',
   path: '/copyright-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UploadRoute = UploadRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/copyright-policy': typeof CopyrightPolicyRoute
+  '/requests': typeof RequestsRoute
   '/upload': typeof UploadRoute
   '/library/$partId': typeof LibraryPartIdRoute
   '/library/': typeof LibraryIndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/copyright-policy': typeof CopyrightPolicyRoute
+  '/requests': typeof RequestsRoute
   '/upload': typeof UploadRoute
   '/library/$partId': typeof LibraryPartIdRoute
   '/library': typeof LibraryIndexRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/copyright-policy': typeof CopyrightPolicyRoute
+  '/requests': typeof RequestsRoute
   '/upload': typeof UploadRoute
   '/library/$partId': typeof LibraryPartIdRoute
   '/library/': typeof LibraryIndexRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/copyright-policy'
+    | '/requests'
     | '/upload'
     | '/library/$partId'
     | '/library/'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/copyright-policy'
+    | '/requests'
     | '/upload'
     | '/library/$partId'
     | '/library'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/copyright-policy'
+    | '/requests'
     | '/upload'
     | '/library/$partId'
     | '/library/'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CopyrightPolicyRoute: typeof CopyrightPolicyRoute
+  RequestsRoute: typeof RequestsRoute
   UploadRoute: typeof UploadRoute
   LibraryPartIdRoute: typeof LibraryPartIdRoute
   LibraryIndexRoute: typeof LibraryIndexRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/copyright-policy'
       fullPath: '/copyright-policy'
       preLoaderRoute: typeof CopyrightPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upload': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CopyrightPolicyRoute: CopyrightPolicyRoute,
+  RequestsRoute: RequestsRoute,
   UploadRoute: UploadRoute,
   LibraryPartIdRoute: LibraryPartIdRoute,
   LibraryIndexRoute: LibraryIndexRoute,
