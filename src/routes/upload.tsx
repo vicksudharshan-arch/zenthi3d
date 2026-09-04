@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import {
@@ -53,31 +53,85 @@ const fileCls =
 
 type Origin = "zenthi" | "external";
 
-function SelectedFileList({ files, onRemove }: { files: File[]; onRemove: (i: number) => void }) {
+type FileStatus = {
+  status: "uploading" | "done" | "error";
+  pct: number;
+  error?: string;
+};
+
+export const fileKey = (group: string, f: File) => `${group}:${f.name}:${f.size}`;
+
+function SelectedFileList({
+  files,
+  group,
+  statuses,
+  onRemove,
+  onRetry,
+}: {
+  files: File[];
+  group: string;
+  statuses: Record<string, FileStatus>;
+  onRemove: (i: number) => void;
+  onRetry: (f: File, group: string) => void;
+}) {
   if (files.length === 0) return null;
   return (
     <ul className="space-y-2">
-      {files.map((f, i) => (
-        <li
-          key={`${f.name}-${f.size}-${i}`}
-          className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background px-3 py-2"
-        >
-          <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
-          <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
-            {(f.size / 1024).toFixed(0)} KB
-          </span>
-          <button
-            type="button"
-            onClick={() => onRemove(i)}
-            className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+      {files.map((f, i) => {
+        const st = statuses[fileKey(group, f)];
+        return (
+          <li
+            key={`${f.name}-${f.size}-${i}`}
+            className="rounded-sm border border-border bg-background px-3 py-2"
           >
-            Remove
-          </button>
-        </li>
-      ))}
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 flex-1 truncate font-mono text-xs">{f.name}</span>
+              <span className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
+                {(f.size / 1024).toFixed(0)} KB
+              </span>
+              {st?.status === "error" ? (
+                <button
+                  type="button"
+                  onClick={() => onRetry(f, group)}
+                  className="font-mono text-[0.65rem] tracking-widest text-primary uppercase hover:underline"
+                >
+                  Retry
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+              >
+                Remove
+              </button>
+            </div>
+            {st ? (
+              <div className="mt-2">
+                <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className={`h-full transition-all ${
+                      st.status === "error" ? "bg-destructive" : "bg-primary"
+                    }`}
+                    style={{ width: `${st.status === "done" ? 100 : st.pct}%` }}
+                  />
+                </div>
+                <p className="mt-1 font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase">
+                  {st.status === "done"
+                    ? "Uploaded"
+                    : st.status === "error"
+                      ? `Failed — ${st.error ?? "network error"}`
+                      : `Uploading ${st.pct}%`}
+                </p>
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }
+
 
 function UploadPage() {
   const [name, setName] = useState("");
@@ -106,19 +160,82 @@ function UploadPage() {
   const [licensed, setLicensed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [statuses, setStatuses] = useState<Record<string, FileStatus>>({});
+  const uploadedRef = useRef<Record<string, string>>({});
 
   const hasAnyFile = stepFiles.length > 0 || stlFiles.length > 0 || extraFiles.length > 0;
   const encourageReference = SAFETY_SENSITIVE_CATEGORIES.includes(category);
+  const hasFailures = Object.values(statuses).some((s) => s.status === "error");
 
-  async function uploadFile(f: File) {
+  function setStatus(key: string, next: FileStatus) {
+    setStatuses((s) => ({ ...s, [key]: next }));
+  }
+
+  /** Uploads via XHR so we get real progress events; caches the path so retries
+   *  only re-send files that actually failed. */
+  function uploadFile(f: File, group: string) {
+    const key = fileKey(group, f);
+    const cached = uploadedRef.current[key];
+    if (cached) {
+      setStatus(key, { status: "done", pct: 100 });
+      return Promise.resolve(cached);
+    }
     const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
     const path = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("part-files").upload(path, f, {
-      contentType: f.type || "application/octet-stream",
+    const url = `${import.meta.env["VITE_SUPABASE_URL"]}/storage/v1/object/part-files/${path}`;
+    const apiKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string;
+
+    setStatus(key, { status: "uploading", pct: 0 });
+
+    return new Promise<string>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("apikey", apiKey);
+      xhr.setRequestHeader("x-upsert", "false");
+      xhr.setRequestHeader("Content-Type", f.type || "application/octet-stream");
+      xhr.upload.onprogress = (ev) => {
+        if (!ev.lengthComputable) return;
+        setStatus(key, {
+          status: "uploading",
+          pct: Math.min(99, Math.round((ev.loaded / ev.total) * 100)),
+        });
+      };
+      const fail = (message: string) => {
+        setStatus(key, { status: "error", pct: 0, error: message });
+        reject(new Error(`${f.name}: ${message}`));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          uploadedRef.current[key] = path;
+          setStatus(key, { status: "done", pct: 100 });
+          resolve(path);
+        } else {
+          let message = `upload failed (${xhr.status})`;
+          try {
+            const body = JSON.parse(xhr.responseText) as { message?: string; error?: string };
+            message = body.message || body.error || message;
+          } catch {
+            /* keep default */
+          }
+          fail(message);
+        }
+      };
+      xhr.onerror = () => fail("network error");
+      xhr.ontimeout = () => fail("timed out");
+      xhr.onabort = () => fail("upload cancelled");
+      xhr.send(f);
     });
-    if (error) throw error;
-    return path;
   }
+
+  async function retryFile(f: File, group: string) {
+    try {
+      await uploadFile(f, group);
+      toast.success(`${f.name} uploaded — submit again to finish.`);
+    } catch {
+      toast.error(`${f.name} failed again. Check your connection and retry.`);
+    }
+  }
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -178,16 +295,16 @@ function UploadPage() {
     try {
       const stepUploads = [];
       for (const file of stepFiles) {
-        stepUploads.push({ path: await uploadFile(file), name: file.name, size: file.size });
+        stepUploads.push({ path: await uploadFile(file, "step"), name: file.name, size: file.size });
       }
       const stlUploads = [];
       for (const file of stlFiles) {
-        stlUploads.push({ path: await uploadFile(file), name: file.name, size: file.size });
+        stlUploads.push({ path: await uploadFile(file, "stl"), name: file.name, size: file.size });
       }
       const extras = [];
       for (const file of extraFiles) {
         const kind = file.name.split(".").pop()?.toLowerCase() ?? "file";
-        extras.push({ kind, path: await uploadFile(file), name: file.name, size: file.size });
+        extras.push({ kind, path: await uploadFile(file, "extra"), name: file.name, size: file.size });
       }
 
       const { error } = await supabase.from("parts").insert({
@@ -578,7 +695,13 @@ function UploadPage() {
                   design for their own fit. Select several at once if the part has multiple pieces.
                 </p>
               </div>
-              <SelectedFileList files={stepFiles} onRemove={(i) => setStepFiles((s) => s.filter((_, idx) => idx !== i))} />
+              <SelectedFileList
+                files={stepFiles}
+                group="step"
+                statuses={statuses}
+                onRetry={retryFile}
+                onRemove={(i) => setStepFiles((s) => s.filter((_, idx) => idx !== i))}
+              />
             </div>
             <div className="space-y-4">
               <div>
@@ -612,7 +735,13 @@ function UploadPage() {
                 </p>
 
               </div>
-              <SelectedFileList files={stlFiles} onRemove={(i) => setStlFiles((s) => s.filter((_, idx) => idx !== i))} />
+              <SelectedFileList
+                files={stlFiles}
+                group="stl"
+                statuses={statuses}
+                onRetry={retryFile}
+                onRemove={(i) => setStlFiles((s) => s.filter((_, idx) => idx !== i))}
+              />
             </div>
 
             <div className="space-y-4 rounded-sm border border-border bg-secondary/50 p-4">
@@ -642,6 +771,9 @@ function UploadPage() {
               </div>
               <SelectedFileList
                 files={extraFiles}
+                group="extra"
+                statuses={statuses}
+                onRetry={retryFile}
                 onRemove={(i) => setExtraFiles((s) => s.filter((_, idx) => idx !== i))}
               />
             </div>
@@ -758,20 +890,27 @@ function UploadPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               type="submit"
               disabled={!licensed || submitting || !hasAnyFile}
               className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {submitting ? "Uploading…" : "Submit for review"}
+              {submitting ? "Uploading…" : hasFailures ? "Retry & submit" : "Submit for review"}
             </button>
             {!licensed && (
               <p className="font-mono text-xs text-muted-foreground">
                 Accept the license terms to submit.
               </p>
             )}
+            {hasFailures && !submitting && (
+              <p className="font-mono text-xs text-destructive">
+                Some files didn't upload. Retry them above, or submit again — files that already
+                uploaded won't be sent twice.
+              </p>
+            )}
           </div>
+
         </form>
       </div>
     </SiteShell>
