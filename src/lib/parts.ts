@@ -211,3 +211,77 @@ export function parseExtraFiles(value: unknown): ExtraFile[] {
     }))
     .filter((f) => f.path && f.name);
 }
+
+// ---- Multi-file support (STEP / STL / additional files) ----
+
+export type PartFile = { path: string; name: string; size: number };
+
+export function parseFileList(value: unknown): PartFile[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((f): f is PartFile => !!f && typeof f === "object")
+    .map((f) => ({
+      path: String(f.path ?? ""),
+      name: String(f.name ?? ""),
+      size: Number(f.size ?? 0),
+    }))
+    .filter((f) => f.path && f.name);
+}
+
+export type FileGroup = "step" | "stl" | "extra";
+
+export type PartFileEntry = {
+  group: FileGroup;
+  index: number;
+  name: string;
+  size: number;
+  ext: string;
+  badge: string;
+};
+
+export type PartFileSource = {
+  step_files?: unknown;
+  stl_files?: unknown;
+  extra_files?: unknown;
+};
+
+export const PREVIEWABLE_EXTS = ["stl", "obj", "ply", "svg", "pdf"];
+
+export function fileExt(name: string) {
+  return name.split(".").pop()?.toLowerCase() ?? "";
+}
+
+export function partFileEntries(part: PartFileSource): PartFileEntry[] {
+  const entries: PartFileEntry[] = [];
+  parseFileList(part.step_files).forEach((f, index) =>
+    entries.push({
+      group: "step",
+      index,
+      name: f.name,
+      size: f.size,
+      ext: fileExt(f.name),
+      badge: "STEP · editable",
+    }),
+  );
+  parseFileList(part.stl_files).forEach((f, index) =>
+    entries.push({
+      group: "stl",
+      index,
+      name: f.name,
+      size: f.size,
+      ext: fileExt(f.name),
+      badge: "STL · print-ready",
+    }),
+  );
+  parseExtraFiles(part.extra_files).forEach((f, index) =>
+    entries.push({
+      group: "extra",
+      index,
+      name: f.name,
+      size: f.size,
+      ext: fileExt(f.name),
+      badge: extraFileBadge(f.kind),
+    }),
+  );
+  return entries;
+}
