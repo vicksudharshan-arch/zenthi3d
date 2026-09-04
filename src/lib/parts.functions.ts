@@ -61,12 +61,23 @@ export const setPartStatus = createServerFn({ method: "POST" })
     const { requireAdminUnlocked } = await import("./admin-gate.server");
     await requireAdminUnlocked();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { data: updated, error } = await supabaseAdmin
       .from("parts")
       .update({ status: data.status })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .select("id, request_id")
+      .maybeSingle();
     if (error) throw new Error(error.message);
+
+    // Approving a submission that was tagged to a request fulfils that request.
+    if (data.status === "approved" && updated?.request_id) {
+      await supabaseAdmin
+        .from("requests")
+        .update({ status: "fulfilled", fulfilled_part_id: updated.id })
+        .eq("id", updated.request_id);
+    }
     return { ok: true };
+
   });
 
 const vehicleSchema = z.object({
