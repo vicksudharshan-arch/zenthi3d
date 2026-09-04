@@ -27,6 +27,8 @@ export type PartRow = {
   oem_part_numbers: string | null;
   aftermarket_part_numbers: { brand: string; number: string }[];
   extra_files: { kind: string; path: string; name: string; size: number }[];
+  step_files: { path: string; name: string; size: number }[];
+  stl_files: { path: string; name: string; size: number }[];
   step_file_path: string | null;
   step_file_name: string | null;
   step_file_size: number | null;
@@ -120,13 +122,15 @@ async function pathsForParts(ids: string[]) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: rows } = await supabaseAdmin
     .from("parts")
-    .select("step_file_path, stl_file_path, extra_files")
+    .select("step_file_path, stl_file_path, extra_files, step_files, stl_files")
     .in("id", ids);
   return Array.from(
     new Set(
       (rows ?? []).flatMap((r) => {
-        const extras = Array.isArray(r.extra_files) ? (r.extra_files as { path?: string }[]) : [];
-        return [r.step_file_path, r.stl_file_path, ...extras.map((f) => f?.path)];
+        const lists = [r.extra_files, r.step_files, r.stl_files].flatMap((v) =>
+          Array.isArray(v) ? (v as { path?: string }[]) : [],
+        );
+        return [r.step_file_path, r.stl_file_path, ...lists.map((f) => f?.path)];
       }),
     ),
   ).filter((p): p is string => !!p);
@@ -151,6 +155,7 @@ export const getDownloadUrl = createServerFn({ method: "POST" })
       .object({
         id: z.string(),
         format: z.enum(["step", "stl", "extra"]).optional(),
+        index: z.number().int().optional(),
         extraIndex: z.number().int().optional(),
       })
       .parse(input),
@@ -159,27 +164,33 @@ export const getDownloadUrl = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: part, error } = await supabaseAdmin
       .from("parts")
-      .select("step_file_path, step_file_name, stl_file_path, stl_file_name, extra_files")
+      .select(
+        "step_file_path, step_file_name, stl_file_path, stl_file_name, extra_files, step_files, stl_files",
+      )
       .eq("id", data.id)
       .eq("status", "approved")
       .maybeSingle();
     if (error || !part) throw new Error(error?.message ?? "Part not found");
 
+    const list = (v: unknown) =>
+      Array.isArray(v) ? (v as { path?: string; name?: string }[]) : [];
+    const index = data.index ?? data.extraIndex ?? 0;
+
     let path: string | null = null;
     let fileName: string | null = null;
+
     if (data.format === "extra") {
-      const extras = Array.isArray(part.extra_files)
-        ? (part.extra_files as { path?: string; name?: string }[])
-        : [];
-      const f = extras[data.extraIndex ?? -1];
+      const f = list(part.extra_files)[index];
       path = f?.path ?? null;
       fileName = f?.name ?? null;
     } else if (data.format === "stl") {
-      path = part.stl_file_path;
-      fileName = part.stl_file_name;
+      const f = list(part.stl_files)[index];
+      path = f?.path ?? part.stl_file_path;
+      fileName = f?.name ?? part.stl_file_name;
     } else {
-      path = part.step_file_path;
-      fileName = part.step_file_name;
+      const f = list(part.step_files)[index];
+      path = f?.path ?? part.step_file_path;
+      fileName = f?.name ?? part.step_file_name;
     }
     if (!path) throw new Error("That file isn't available for this part.");
 

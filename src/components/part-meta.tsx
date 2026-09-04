@@ -1,38 +1,35 @@
 import {
-  extraFileBadge,
+  PREVIEWABLE_EXTS,
   parseAftermarket,
-  parseExtraFiles,
+  partFileEntries,
   type AftermarketPartNumber,
-  type ExtraFile,
+  type FileGroup,
+  type PartFileEntry,
+  type PartFileSource,
 } from "@/lib/parts";
 
-export type PartFileInfo = {
-  step_file_name: string | null;
-  stl_file_name: string | null;
-  extra_files: ExtraFile[] | unknown;
-};
+export type PartFileInfo = PartFileSource;
 
 export function FormatBadges({ part }: { part: PartFileInfo }) {
-  const extras = parseExtraFiles(part.extra_files);
+  const entries = partFileEntries(part);
+  if (entries.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="tech-label">Formats</span>
-      {part.step_file_name && (
-        <span className="rounded-sm border border-primary px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-primary uppercase">
-          STEP · editable
-        </span>
-      )}
-      {part.stl_file_name && (
-        <span className="rounded-sm border border-brass px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-brass-foreground uppercase">
-          STL · print-ready
-        </span>
-      )}
-      {extras.map((f, i) => (
+      {entries.map((f) => (
         <span
-          key={`${f.kind}-${i}`}
-          className="rounded-sm border border-border px-2 py-0.5 font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase"
+          key={`${f.group}-${f.index}`}
+          title={f.name}
+          className={
+            "rounded-sm border px-2 py-0.5 font-mono text-[0.65rem] tracking-widest uppercase " +
+            (f.group === "step"
+              ? "border-primary text-primary"
+              : f.group === "stl"
+                ? "border-brass text-brass-foreground"
+                : "border-border text-muted-foreground")
+          }
         >
-          {extraFileBadge(f.kind)}
+          {f.badge}
         </span>
       ))}
     </div>
@@ -95,40 +92,46 @@ export function PartNumbers({
   );
 }
 
-const PREVIEWABLE_EXTRAS = ["obj", "ply", "svg", "pdf"];
-
-export function ExtraDownloadButtons({
-  extras,
+/** One preview + download control pair per individual file on the part. */
+export function FileActionButtons({
+  entries,
   onDownload,
   onPreview,
   busyKey,
 }: {
-  extras: ExtraFile[];
-  onDownload: (index: number) => void;
-  onPreview?: (index: number) => void;
+  entries: PartFileEntry[];
+  onDownload: (group: FileGroup, index: number) => void;
+  onPreview?: (entry: PartFileEntry) => void;
   busyKey: string | null;
 }) {
   return (
     <>
-      {extras.map((f, i) => {
-        const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+      {entries.map((f) => {
+        const key = `${f.group}:${f.index}`;
         return (
-          <span key={`${f.path}-${i}`} className="inline-flex items-center gap-2">
-            {onPreview && PREVIEWABLE_EXTRAS.includes(ext) && (
+          <span key={key} className="inline-flex items-center gap-2">
+            {onPreview && PREVIEWABLE_EXTS.includes(f.ext) && (
               <button
-                onClick={() => onPreview(i)}
+                onClick={() => onPreview(f)}
                 className="inline-flex h-9 items-center rounded-sm border border-border px-3 text-sm font-medium hover:bg-secondary"
               >
-                Preview {ext.toUpperCase()}
+                Preview {f.ext.toUpperCase()}
               </button>
             )}
             <button
-              onClick={() => onDownload(i)}
-              disabled={busyKey === `extra:${i}`}
+              onClick={() => onDownload(f.group, f.index)}
+              disabled={busyKey === key}
               title={f.name}
-              className="inline-flex h-9 max-w-[16rem] items-center truncate rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+              className={
+                "inline-flex h-9 max-w-[16rem] items-center truncate rounded-sm px-4 text-sm font-medium disabled:opacity-50 " +
+                (f.group === "step"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : f.group === "stl"
+                    ? "border border-primary text-primary hover:bg-primary/10"
+                    : "border border-border hover:bg-secondary")
+              }
             >
-              {busyKey === `extra:${i}` ? "Preparing…" : `Download ${f.name}`}
+              {busyKey === key ? "Preparing…" : `Download ${f.name}`}
             </button>
           </span>
         );
@@ -136,4 +139,3 @@ export function ExtraDownloadButtons({
     </>
   );
 }
-

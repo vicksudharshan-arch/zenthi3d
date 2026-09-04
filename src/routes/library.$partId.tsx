@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { PartPreviewModal, type PreviewTarget } from "@/components/part-preview-modal";
 import {
-  ExtraDownloadButtons,
+  FileActionButtons,
   FormatBadges,
   PartNumbers,
   ReferenceOnlyBadge,
@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORY_LABELS,
   CONTRIBUTOR_TYPE_LABELS,
-  parseExtraFiles,
+  partFileEntries,
   type AftermarketPartNumber,
   type Category,
   vehicleDetailLabel,
@@ -59,6 +59,8 @@ type Part = {
   oem_part_numbers: string | null;
   aftermarket_part_numbers: AftermarketPartNumber[];
   extra_files: { kind: string; path: string; name: string; size: number }[];
+  step_files: { path: string; name: string; size: number }[];
+  stl_files: { path: string; name: string; size: number }[];
   notes: string | null;
   uploader_name: string | null;
   step_file_name: string | null;
@@ -80,7 +82,7 @@ function PartDetailPage() {
       const { data, error } = await supabase
         .from("parts")
         .select(
-          "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,original_creator,created_at",
+          "id,name,description,category,reference_only,placement,material,thickness_infill,contributor_type,vehicles,oem_part_numbers,aftermarket_part_numbers,extra_files,step_files,stl_files,notes,uploader_name,step_file_name,stl_file_name,source_link,license_type,original_creator,created_at",
         )
         .eq("id", partId)
         .eq("status", "approved")
@@ -90,15 +92,15 @@ function PartDetailPage() {
     },
   });
 
-  const extras = parseExtraFiles(data?.extra_files);
+  const fileEntries = partFileEntries(data ?? {});
 
-  async function download(format: "step" | "stl" | "extra", extraIndex?: number) {
+  async function download(format: "step" | "stl" | "extra", index: number) {
     if (!data) return;
-    const key = format === "extra" ? `extra:${extraIndex}` : format;
+    const key = `${format}:${index}`;
     setDownloading(key);
     try {
       const { url } = await getDownloadUrl({
-        data: { id: data.id, format, ...(extraIndex !== undefined ? { extraIndex } : {}) },
+        data: { id: data.id, format, index },
       });
       window.location.href = url;
     } catch {
@@ -217,9 +219,8 @@ function PartDetailPage() {
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
               <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
                 <span>
-                  {[data.step_file_name, data.stl_file_name, ...extras.map((f) => f.name)]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  {fileEntries.map((f) => f.name).join(" · ")}
+
                   {data.uploader_name ? ` · ${data.uploader_name}` : ""}
                 </span>
 
@@ -265,31 +266,13 @@ function PartDetailPage() {
                 >
                   Copy link
                 </button>
-                {data.step_file_name && (
-                  <button
-                    onClick={() => download("step")}
-                    disabled={downloading === "step"}
-                    className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {downloading === "step" ? "Preparing…" : "Download STEP"}
-                  </button>
-                )}
-                {data.stl_file_name && (
-                  <button
-                    onClick={() => download("stl")}
-                    disabled={downloading === "stl"}
-                    className="inline-flex h-9 items-center rounded-sm border border-primary px-4 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
-                  >
-                    {downloading === "stl" ? "Preparing…" : "Download STL"}
-                  </button>
-                )}
-                <ExtraDownloadButtons
-                  extras={extras}
-                  onDownload={(i) => download("extra", i)}
-                  onPreview={(i) =>
+                <FileActionButtons
+                  entries={fileEntries}
+                  onDownload={(group, i) => download(group, i)}
+                  onPreview={(entry) =>
                     setPreview({
                       open: true,
-                      target: { format: "extra", extraIndex: i, fileName: extras[i]!.name },
+                      target: { format: entry.group, index: entry.index, fileName: entry.name },
                     })
                   }
                   busyKey={downloading}
@@ -305,8 +288,8 @@ function PartDetailPage() {
           part={{
             id: data.id,
             name: data.name,
-            step_file_name: data.step_file_name,
-            stl_file_name: data.stl_file_name,
+            step_files: data.step_files,
+            stl_files: data.stl_files,
             extra_files: data.extra_files,
           }}
           target={preview.target}

@@ -94,9 +94,11 @@ export type Database = {
           step_file_name: string | null
           step_file_path: string | null
           step_file_size: number | null
+          step_files: Json
           stl_file_name: string | null
           stl_file_path: string | null
           stl_file_size: number | null
+          stl_files: Json
           thickness_infill: string | null
           updated_at: string
           uploader_name: string | null
@@ -124,9 +126,11 @@ export type Database = {
           step_file_name?: string | null
           step_file_path?: string | null
           step_file_size?: number | null
+          step_files?: Json
           stl_file_name?: string | null
           stl_file_path?: string | null
           stl_file_size?: number | null
+          stl_files?: Json
           thickness_infill?: string | null
           updated_at?: string
           uploader_name?: string | null
@@ -154,9 +158,11 @@ export type Database = {
           step_file_name?: string | null
           step_file_path?: string | null
           step_file_size?: number | null
+          step_files?: Json
           stl_file_name?: string | null
           stl_file_path?: string | null
           stl_file_size?: number | null
+          stl_files?: Json
           thickness_infill?: string | null
           updated_at?: string
           uploader_name?: string | null
