@@ -58,6 +58,7 @@ const fileCls =
   " file:mr-4 file:rounded-sm file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-sm file:text-secondary-foreground";
 
 type Origin = "zenthi" | "external" | "modified";
+type Visibility = "private" | "public_reviewed" | "public_auto";
 
 type FileStatus = {
   status: "uploading" | "done" | "error";
