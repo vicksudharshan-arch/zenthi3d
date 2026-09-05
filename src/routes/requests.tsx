@@ -109,6 +109,14 @@ function RequestsPage() {
     },
   });
 
+  const { session } = useAuth();
+  const { data: access } = useQuery({
+    queryKey: ["my-access", session?.user?.id ?? "anon"],
+    enabled: !!session,
+    queryFn: () => getMyAccess(),
+  });
+  const isAdmin = !!access?.isAdmin;
+
   const requests = data ?? [];
 
   const fulfilledIds = requests
