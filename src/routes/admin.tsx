@@ -28,11 +28,19 @@ import {
   updatePart,
   type PartRow,
 } from "@/lib/parts.functions";
-import { getAdminGateState, lockAdmin, unlockAdmin } from "@/lib/admin-gate.functions";
+import {
+  getMyAccess,
+  listAdminRequests,
+  reviewAdminRequest,
+} from "@/lib/admin-access.functions";
 import { listCopyrightReports, setCopyrightReportStatus } from "@/lib/copyright.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Link, useRouter } from "@tanstack/react-router";
 
 
 export const Route = createFileRoute("/admin")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Review queue — Zenthi" },
@@ -50,30 +58,27 @@ export const Route = createFileRoute("/admin")({
   component: AdminGate,
 });
 
+function GateShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SiteShell>
+      <div className="mx-auto max-w-md px-6 py-24">
+        <p className="tech-label text-brass">Restricted</p>
+        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Review queue</h1>
+        {children}
+      </div>
+    </SiteShell>
+  );
+}
+
 function AdminGate() {
-  const qc = useQueryClient();
-  const [passcode, setPasscode] = useState("");
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "gate"],
-    queryFn: () => getAdminGateState(),
+  const { session, loading } = useAuth();
+  const access = useQuery({
+    queryKey: ["access", "me"],
+    queryFn: () => getMyAccess(),
+    enabled: !!session,
   });
 
-  const unlock = useMutation({
-    mutationFn: () => unlockAdmin({ data: { passcode } }),
-    onSuccess: (res) => {
-      if (res.ok) {
-        setPasscode("");
-        qc.invalidateQueries({ queryKey: ["admin", "gate"] });
-      } else if (!res.configured) {
-        toast.error("No admin passcode is configured yet.");
-      } else {
-        toast.error("Incorrect passcode.");
-      }
-    },
-    onError: () => toast.error("Could not verify the passcode."),
-  });
-
-  if (isLoading) {
+  if (loading || (session && access.isLoading)) {
     return (
       <SiteShell>
         <div className="mx-auto max-w-md px-6 py-24 font-mono text-sm text-muted-foreground">
@@ -83,55 +88,52 @@ function AdminGate() {
     );
   }
 
-  if (!data?.unlocked) {
+  if (!session) {
     return (
-      <SiteShell>
-        <div className="mx-auto max-w-md px-6 py-24">
-          <p className="tech-label text-brass">Restricted</p>
-          <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Review queue</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Enter the shared admin passcode to view and manage submissions.
-          </p>
-          {data && !data.configured && (
-            <p className="mt-4 rounded-sm border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              No admin passcode is configured in the database yet.
-            </p>
-          )}
-          <form
-            className="mt-6 space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (passcode) unlock.mutate();
-            }}
+      <GateShell>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          This area is for Zenthi admins. Sign in with your account to continue.
+        </p>
+        <Link
+          to="/auth"
+          className="mt-6 inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Sign in
+        </Link>
+      </GateShell>
+    );
+  }
+
+  if (!access.data?.isAdmin) {
+    return (
+      <GateShell>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          You're signed in, but your account doesn't have the admin role yet.
+          {access.data?.request?.status === "pending"
+            ? " Your admin access request is pending review."
+            : " You can request admin access from your account page."}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            to="/account"
+            className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <div>
-              <label className={labelCls} htmlFor="passcode">
-                Admin passcode
-              </label>
-              <input
-                id="passcode"
-                type="password"
-                autoComplete="current-password"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className={fieldCls}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!passcode || unlock.isPending}
-              className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-            >
-              {unlock.isPending ? "Checking…" : "Unlock"}
-            </button>
-          </form>
+            Go to your account
+          </Link>
+          <Link
+            to="/community-guidelines"
+            className="inline-flex h-11 items-center rounded-sm border border-border px-6 text-sm font-medium hover:bg-secondary"
+          >
+            Community guidelines
+          </Link>
         </div>
-      </SiteShell>
+      </GateShell>
     );
   }
 
   return <AdminPage />;
 }
+
 
 const TABS = ["pending", "approved", "private_fulfillment", "rejected"] as const;
 
