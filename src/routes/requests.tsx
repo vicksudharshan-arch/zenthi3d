@@ -7,7 +7,13 @@ import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { DRIVETRAINS, RESTRICTED_MAKE_MESSAGE, isRestrictedMake } from "@/lib/parts";
-import { reopenRequest, revealPrivateFulfillment } from "@/lib/requests.functions";
+import {
+  adminGetRequestContact,
+  reopenRequest,
+  revealPrivateFulfillment,
+  revealRequestContact,
+} from "@/lib/requests.functions";
+import { getMyAccess } from "@/lib/admin-access.functions";
 
 export const Route = createFileRoute("/requests")({
   head: () => ({
@@ -579,6 +585,92 @@ function RequestsPage() {
         />
       )}
     </SiteShell>
+  );
+}
+
+function ContactLine({ requestId, isAdmin }: { requestId: string; isAdmin: boolean }) {
+  const [contact, setContact] = useState<string | null | undefined>(undefined);
+  const [asking, setAsking] = useState(false);
+  const [nameClaim, setNameClaim] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (contact !== undefined) {
+    return (
+      <p className="mt-1 font-mono text-xs text-foreground">
+        Contact: {contact ?? "none provided"}
+      </p>
+    );
+  }
+
+  const revealAsAdmin = async () => {
+    setBusy(true);
+    try {
+      const res = await adminGetRequestContact({ data: { requestId } });
+      setContact(res.contact);
+    } catch {
+      toast.error("Couldn't load contact details.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const revealAsPoster = async () => {
+    if (!nameClaim.trim()) return;
+    setBusy(true);
+    try {
+      const res = await revealRequestContact({
+        data: { requestId, requesterName: nameClaim.trim() },
+      });
+      if (!res.ok) {
+        toast.error("That name doesn't match the one on this request.");
+        return;
+      }
+      setContact(res.contact);
+      setAsking(false);
+    } catch {
+      toast.error("Couldn't load contact details.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-1">
+      {!asking ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => (isAdmin ? void revealAsAdmin() : setAsking(true))}
+          className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+        >
+          {isAdmin ? "Show contact details" : "I posted this — show contact details"}
+        </button>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={nameClaim}
+            onChange={(e) => setNameClaim(e.target.value)}
+            placeholder="Your name as posted"
+            className="h-8 rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none focus:border-ring"
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void revealAsPoster()}
+            className="inline-flex h-8 items-center rounded-sm border border-border px-3 text-xs hover:bg-secondary disabled:opacity-50"
+          >
+            Show
+          </button>
+          <button
+            type="button"
+            onClick={() => setAsking(false)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
