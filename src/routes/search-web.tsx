@@ -338,10 +338,11 @@ function ResultCard({ result }: { result: ExternalResult }) {
       <div className="flex flex-1 flex-col p-4">
         <p className="tech-label">{result.source}</p>
         <h3 className="mt-2 font-display text-base font-semibold leading-snug">{result.title}</h3>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {result.author ? `By ${result.author}` : "Author not listed"}
-          {result.license ? ` · ${result.license}` : ""}
-        </p>
+        {result.snippet ? (
+          <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-muted-foreground">
+            {result.snippet}
+          </p>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2 pt-2">
           <a
             href={result.sourceUrl}
