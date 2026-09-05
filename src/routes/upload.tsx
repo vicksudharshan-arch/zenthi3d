@@ -802,7 +802,7 @@ function UploadPage() {
               />
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                 Word this as &quot;[Part] for [Vehicle]&quot; rather than &quot;[Vehicle] [Part]&quot; — e.g.
-                &quot;Bracket for Honda Civic,&quot; not &quot;Honda Civic Bracket.&quot; This makes clear the
+                &quot;Bracket for Mazda Miata,&quot; not &quot;Mazda Miata Bracket.&quot; This makes clear the
                 part isn&apos;t official or endorsed, just compatible.
               </p>
             </div>
