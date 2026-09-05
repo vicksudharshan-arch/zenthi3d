@@ -15,6 +15,26 @@ function Wordmark() {
   );
 }
 
+function AdminLink() {
+  const { session, loading } = useAuth();
+  const access = useQuery({
+    queryKey: ["access", "me"],
+    queryFn: () => getMyAccess(),
+    enabled: !!session && !loading,
+  });
+
+  if (loading || !session || !access.data?.isAdmin) return null;
+
+  return (
+    <Link
+      to="/admin"
+      className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+    >
+      Admin
+    </Link>
+  );
+}
+
 function AccountNav() {
   const { email, loading } = useAuth();
   if (loading) return null;
