@@ -42,7 +42,7 @@ export const MONEY_DISCLAIMER =
 type RequestRow = {
   id: string;
   requester_name: string;
-  requester_contact: string | null;
+  
   part_description: string;
   file_type_needed: string;
   make: string | null;
