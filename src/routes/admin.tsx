@@ -357,7 +357,9 @@ function AdminPage() {
           </div>
         )}
 
+        <AdminRequests />
         <CopyrightReports />
+
       </div>
 
 
