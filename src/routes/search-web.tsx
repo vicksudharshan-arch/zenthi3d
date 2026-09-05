@@ -309,7 +309,6 @@ function ResultCard({ result }: { result: ExternalResult }) {
         title: result.title,
         thumbnail_url: result.thumbnail,
         source_site: result.source,
-        license: result.license,
         suggested_by: user.id,
       });
       if (error) throw error;
