@@ -47,8 +47,30 @@ export const Route = createFileRoute("/upload")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: UploadPage,
+  component: UploadRoute,
 });
+
+/** Uploading requires an account; browsing the library does not. */
+function UploadRoute() {
+  const { session, loading } = useAuth();
+  if (loading) return null;
+  if (!session) {
+    return (
+      <SiteShell>
+        <div className="mx-auto w-full max-w-3xl px-5 py-16">
+          <AuthGate
+            title="Sign in to upload a part"
+            description="Files are credited to an account so attribution, licences and the review queue stay trustworthy."
+          >
+            <span />
+          </AuthGate>
+        </div>
+      </SiteShell>
+    );
+  }
+  return <UploadPage />;
+}
+
 
 const labelCls = "tech-label block";
 const fieldCls =
