@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { finalizeRequestFulfillment, getRequestSummary } from "@/lib/requests.functions";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import {
   type ContributorType,
   type Vehicle,
 } from "@/lib/parts";
+import { clearUploadDraft, loadUploadDraft, saveUploadDraft } from "@/lib/upload-draft";
 
 
 export const Route = createFileRoute("/upload")({
