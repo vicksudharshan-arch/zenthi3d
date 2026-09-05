@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type PartRow = {
   id: string;
@@ -41,9 +42,9 @@ export type PartRow = {
   created_at: string;
 };
 
-export const listAllParts = createServerFn({ method: "GET" }).handler(async () => {
-  const { requireAdminUnlocked } = await import("./admin-gate.server");
-  await requireAdminUnlocked();
+export const listAllParts = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { requireAdmin } = await import("./admin-role.server");
+  await requireAdmin(context);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("parts")
@@ -53,13 +54,13 @@ export const listAllParts = createServerFn({ method: "GET" }).handler(async () =
   return (data ?? []) as unknown as PartRow[];
 });
 
-export const setPartStatus = createServerFn({ method: "POST" })
+export const setPartStatus = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z.object({ id: z.string(), status: z.enum(["approved", "rejected", "pending", "private_fulfillment"]) }).parse(input),
   )
-  .handler(async ({ data }) => {
-    const { requireAdminUnlocked } = await import("./admin-gate.server");
-    await requireAdminUnlocked();
+  .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin-role.server");
+    await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: updated, error } = await supabaseAdmin
       .from("parts")
@@ -109,7 +110,7 @@ const editableFields = {
   aftermarket_part_numbers: z.array(aftermarketSchema),
 };
 
-export const updatePart = createServerFn({ method: "POST" })
+export const updatePart = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
@@ -119,9 +120,9 @@ export const updatePart = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
-    const { requireAdminUnlocked } = await import("./admin-gate.server");
-    await requireAdminUnlocked();
+  .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin-role.server");
+    await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { id, ...patch } = data;
     const { error } = await supabaseAdmin.from("parts").update(patch).eq("id", id);
@@ -147,11 +148,11 @@ async function pathsForParts(ids: string[]) {
   ).filter((p): p is string => !!p);
 }
 
-export const deleteParts = createServerFn({ method: "POST" })
+export const deleteParts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ ids: z.array(z.string()).min(1) }).parse(input))
-  .handler(async ({ data }) => {
-    const { requireAdminUnlocked } = await import("./admin-gate.server");
-    await requireAdminUnlocked();
+  .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin-role.server");
+    await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const paths = await pathsForParts(data.ids);
     if (paths.length) await supabaseAdmin.storage.from("part-files").remove(paths);
