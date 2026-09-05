@@ -515,8 +515,10 @@ function RequestsPage() {
 
                   <p className="mt-2 text-xs text-muted-foreground">
                     Requested by {r.requester_name}
-                    {r.requester_contact ? ` · ${r.requester_contact}` : ""}
                   </p>
+
+                  <ContactLine requestId={r.id} isAdmin={isAdmin} />
+
 
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     {r.status === "open" ? (
