@@ -204,16 +204,9 @@ function AdminPage() {
               Review queue
             </h1>
           </div>
-          <button
-            onClick={async () => {
-              await lockAdmin();
-              qc.invalidateQueries({ queryKey: ["admin", "gate"] });
-            }}
-            className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
-          >
-            Lock
-          </button>
+          <SignOutButton />
         </div>
+
 
 
         <div className="mt-8 flex gap-1 border-b border-border">
