@@ -296,9 +296,22 @@ function UploadPage() {
       toast.error("The STL field only accepts .stl files.");
       return;
     }
-    const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
+    const cleanVehicles = vehicles.filter(
+      (v) =>
+        v.make.trim() ||
+        v.model.trim() ||
+        (v.engineMake ?? "").trim() ||
+        (v.engineSeries ?? "").trim() ||
+        (v.displacement ?? "").trim() ||
+        (v.generation ?? "").trim() ||
+        (v.drivetrain ?? "").trim(),
+    );
     if (cleanVehicles.length === 0) {
       toast.error("Add at least one vehicle this part fits.");
+      return;
+    }
+    if (cleanVehicles.some((v) => !v.make.trim() || !v.model.trim())) {
+      toast.error("Every vehicle needs at least a make and a model.");
       return;
     }
     const restrictedVehicle = cleanVehicles.find((v) => isRestrictedMake(v.make));
@@ -306,6 +319,7 @@ function UploadPage() {
       toast.error(RESTRICTED_MAKE_MESSAGE);
       return;
     }
+
 
     if (origin === "zenthi" && contributorTypes.length === 0) {
       toast.error("Select at least one contributor tag — what best describes you.");
