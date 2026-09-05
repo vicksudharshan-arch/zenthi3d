@@ -10,8 +10,11 @@ import {
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
   emptyVehicle,
+  isRestrictedMake,
+  RESTRICTED_MAKE_MESSAGE,
   type AftermarketPartNumber,
   type Vehicle,
+
 } from "@/lib/parts";
 import {
   deletePartAsUploader,
@@ -135,9 +138,19 @@ export function UploaderEditDialog({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
+    if (cleanVehicles.some((v) => isRestrictedMake(v.make))) {
+      toast.error(RESTRICTED_MAKE_MESSAGE);
+      return;
+    }
+    if (cleanVehicles.some((v) => !v.make.trim() || !v.model.trim())) {
+      toast.error("Every vehicle needs at least a make and a model.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
+
       const res = await updatePartAsUploader({
         data: {
           id: part.id,
@@ -150,7 +163,7 @@ export function UploaderEditDialog({
           material: material.trim() || null,
           thickness_infill: thickness.trim() || null,
           contributor_type: types,
-          vehicles: vehicles.filter((v) => v.make.trim() || v.model.trim()),
+          vehicles: cleanVehicles,
           oem_part_numbers: oemNumbers.trim() || null,
           aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
           notes: notes.trim() || null,
@@ -306,6 +319,8 @@ export function UploaderEditDialog({
                 vehicles={vehicles}
                 onChange={setVehicles}
                 idPrefix="owner"
+                validateMakes
+
               />
             </div>
           </div>

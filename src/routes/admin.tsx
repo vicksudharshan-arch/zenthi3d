@@ -14,6 +14,8 @@ import {
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
   emptyVehicle,
+  isRestrictedMake,
+  RESTRICTED_MAKE_MESSAGE,
   parseAftermarket,
   partFileEntries,
   vehicleDetailLabel,
@@ -720,8 +722,18 @@ function EditDialog({
           className="mt-6 space-y-5"
           onSubmit={(e) => {
             e.preventDefault();
+            const clean = vehicles.filter((v) => v.make.trim() || v.model.trim());
+            if (clean.some((v) => isRestrictedMake(v.make))) {
+              toast.error(RESTRICTED_MAKE_MESSAGE);
+              return;
+            }
+            if (clean.some((v) => !v.make.trim() || !v.model.trim())) {
+              toast.error("Every vehicle needs at least a make and a model.");
+              return;
+            }
             save.mutate();
           }}
+
         >
           <div>
             <label className={labelCls} htmlFor="edit-name">
@@ -815,7 +827,7 @@ function EditDialog({
           <div>
             <span className={labelCls}>Fitment</span>
             <div className="mt-2">
-              <VehicleFitmentFields vehicles={vehicles} onChange={setVehicles} idPrefix="admin" />
+              <VehicleFitmentFields vehicles={vehicles} onChange={setVehicles} idPrefix="admin" validateMakes />
             </div>
           </div>
 
