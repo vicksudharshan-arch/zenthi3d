@@ -92,6 +92,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
               Requests
             </Link>
             <Link
+              to="/community-guidelines"
+              className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+            >
+              Community guidelines
+            </Link>
+            <Link
               to="/upload"
               className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
             >
