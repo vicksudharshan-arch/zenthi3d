@@ -138,9 +138,19 @@ export function UploaderEditDialog({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    const cleanVehicles = vehicles.filter((v) => v.make.trim() || v.model.trim());
+    if (cleanVehicles.some((v) => isRestrictedMake(v.make))) {
+      toast.error(RESTRICTED_MAKE_MESSAGE);
+      return;
+    }
+    if (cleanVehicles.some((v) => !v.make.trim() || !v.model.trim())) {
+      toast.error("Every vehicle needs at least a make and a model.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
+
       const res = await updatePartAsUploader({
         data: {
           id: part.id,
