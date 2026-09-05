@@ -97,6 +97,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             >
               Upload
             </Link>
+            <AdminLink />
             <AccountNav />
           </nav>
 
