@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { getMyAccess } from "@/lib/admin-access.functions";
 
 function Wordmark() {
   return (
