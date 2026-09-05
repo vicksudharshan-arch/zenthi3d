@@ -358,6 +358,7 @@ function AdminPage() {
         )}
 
         <AdminRequests />
+        <ExternalLeads />
         <CopyrightReports />
 
       </div>
@@ -392,6 +393,81 @@ function SignOutButton() {
     >
       Sign out
     </button>
+  );
+}
+
+function ExternalLeads() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["external-leads"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("external_leads")
+        .select("id, title, source_url, source_site, license, status, created_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  async function mark(id: string, status: string) {
+    const { error } = await supabase.from("external_leads").update({ status }).eq("id", id);
+    if (error) { toast.error("Update failed."); return; }
+    toast.success("Lead updated.");
+    qc.invalidateQueries({ queryKey: ["external-leads"] });
+  }
+
+  const leads = data ?? [];
+
+  return (
+    <section className="mt-16">
+      <h2 className="font-display text-2xl font-semibold tracking-tight">
+        External leads ({leads.filter((l) => l.status === "new").length} new)
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        Listings members spotted elsewhere. Nothing is imported automatically — a person still has
+        to re-upload with proper attribution and licence checks.
+      </p>
+      {isLoading ? (
+        <p className="mt-6 text-sm text-muted-foreground">Loading…</p>
+      ) : leads.length === 0 ? (
+        <p className="mt-6 text-sm text-muted-foreground">No suggestions yet.</p>
+      ) : (
+        <ul className="mt-6 space-y-3">
+          {leads.map((l) => (
+            <li key={l.id} className="rounded-sm border border-border bg-card p-4">
+              <p className="tech-label">
+                {l.source_site ?? "External"} · {l.status}
+              </p>
+              <p className="mt-2 font-display text-base font-semibold">{l.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{l.license ?? "Licence not listed"}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a
+                  href={l.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-xs font-medium hover:bg-secondary"
+                >
+                  Open listing
+                </a>
+                <button
+                  onClick={() => mark(l.id, "handled")}
+                  className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-xs font-medium hover:bg-secondary"
+                >
+                  Mark handled
+                </button>
+                <button
+                  onClick={() => mark(l.id, "dismissed")}
+                  className="inline-flex h-9 items-center rounded-sm border border-border px-4 text-xs font-medium hover:bg-secondary"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

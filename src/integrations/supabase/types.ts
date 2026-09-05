@@ -86,6 +86,45 @@ export type Database = {
         }
         Relationships: []
       }
+      external_leads: {
+        Row: {
+          created_at: string
+          id: string
+          license: string | null
+          note: string | null
+          source_site: string | null
+          source_url: string
+          status: string
+          suggested_by: string
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          license?: string | null
+          note?: string | null
+          source_site?: string | null
+          source_url: string
+          status?: string
+          suggested_by: string
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          license?: string | null
+          note?: string | null
+          source_site?: string | null
+          source_url?: string
+          status?: string
+          suggested_by?: string
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       parts: {
         Row: {
           aftermarket_part_numbers: Json

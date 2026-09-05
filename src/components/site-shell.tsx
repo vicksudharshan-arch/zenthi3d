@@ -58,6 +58,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
               Library
             </Link>
             <Link
+              to="/search-web"
+              className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+            >
+              Search the web
+            </Link>
+            <Link
               to="/requests"
               className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
             >

@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
+import { AuthGate } from "@/components/auth-gate";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { DRIVETRAINS, RESTRICTED_MAKE_MESSAGE, isRestrictedMake } from "@/lib/parts";
 import { reopenRequest, revealPrivateFulfillment } from "@/lib/requests.functions";
@@ -222,6 +224,10 @@ function RequestsPage() {
 
         <section className="mt-12 rounded-sm border border-border bg-card p-6 sm:p-8">
           <h2 className="font-display text-2xl font-semibold tracking-tight">Post a request</h2>
+          <AuthGate
+            title="Sign in to post a request"
+            description="Requests are tied to an account so people fulfilling them know who asked, and so the board stays clean."
+          >
           <form onSubmit={handleSubmit} className="mt-6 space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
@@ -419,6 +425,7 @@ function RequestsPage() {
               {submitting ? "Posting…" : "Post request"}
             </button>
           </form>
+          </AuthGate>
         </section>
 
         <section className="mt-16">
@@ -513,13 +520,7 @@ function RequestsPage() {
 
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     {r.status === "open" ? (
-                      <Link
-                        to="/upload"
-                        search={{ requestId: r.id }}
-                        className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                      >
-                        Fulfill this request
-                      </Link>
+                      <FulfillLink requestId={r.id} />
                     ) : (
                       <>
                         {r.fulfilled_part_id && publicIds.has(r.fulfilled_part_id) && (
@@ -568,6 +569,28 @@ function RequestsPage() {
         />
       )}
     </SiteShell>
+  );
+}
+
+function FulfillLink({ requestId }: { requestId: string }) {
+  const { session, loading } = useAuth();
+  if (loading) return null;
+  return session ? (
+    <Link
+      to="/upload"
+      search={{ requestId }}
+      className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+    >
+      Fulfill this request
+    </Link>
+  ) : (
+    <Link
+      to="/auth"
+      search={{ redirect: `/upload?requestId=${requestId}` }}
+      className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+    >
+      Sign in to fulfill this
+    </Link>
   );
 }
 
