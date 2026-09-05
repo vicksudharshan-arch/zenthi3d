@@ -319,6 +319,8 @@ export function UploaderEditDialog({
                 vehicles={vehicles}
                 onChange={setVehicles}
                 idPrefix="owner"
+                validateMakes
+
               />
             </div>
           </div>
