@@ -96,8 +96,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
             Uploads licensed CC BY 4.0 ·{" "}
+            <Link to="/community-guidelines" className="underline underline-offset-2 hover:text-foreground">
+              Community guidelines
+            </Link>{" "}
+            ·{" "}
             <Link to="/copyright-policy" className="underline underline-offset-2 hover:text-foreground">
               Report a copyright concern
+
             </Link>
           </p>
           <p className="mt-4 max-w-3xl text-xs leading-relaxed text-muted-foreground">
