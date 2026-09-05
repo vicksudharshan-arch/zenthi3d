@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunityGuidelinesRouteImport } from './routes/community-guidelines'
 import { Route as CopyrightPolicyRouteImport } from './routes/copyright-policy'
 import { Route as RequestsRouteImport } from './routes/requests'
+import { Route as SearchWebRouteImport } from './routes/search-web'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as LibraryIndexRouteImport } from './routes/library.index'
 import { Route as LibraryPartIdRouteImport } from './routes/library.$partId'
@@ -55,6 +56,11 @@ const RequestsRoute = RequestsRouteImport.update({
   path: '/requests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SearchWebRoute = SearchWebRouteImport.update({
+  id: '/search-web',
+  path: '/search-web',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
   path: '/upload',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/copyright-policy': typeof CopyrightPolicyRoute
   '/requests': typeof RequestsRoute
+  '/search-web': typeof SearchWebRoute
   '/upload': typeof UploadRoute
   '/library/$partId': typeof LibraryPartIdRoute
   '/library/': typeof LibraryIndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/copyright-policy': typeof CopyrightPolicyRoute
   '/requests': typeof RequestsRoute
+  '/search-web': typeof SearchWebRoute
   '/upload': typeof UploadRoute
   '/library/$partId': typeof LibraryPartIdRoute
   '/library': typeof LibraryIndexRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/community-guidelines': typeof CommunityGuidelinesRoute
   '/copyright-policy': typeof CopyrightPolicyRoute
   '/requests': typeof RequestsRoute
+  '/search-web': typeof SearchWebRoute
   '/upload': typeof UploadRoute
   '/library/$partId': typeof LibraryPartIdRoute
   '/library/': typeof LibraryIndexRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/community-guidelines'
     | '/copyright-policy'
     | '/requests'
+    | '/search-web'
     | '/upload'
     | '/library/$partId'
     | '/library/'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/community-guidelines'
     | '/copyright-policy'
     | '/requests'
+    | '/search-web'
     | '/upload'
     | '/library/$partId'
     | '/library'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/community-guidelines'
     | '/copyright-policy'
     | '/requests'
+    | '/search-web'
     | '/upload'
     | '/library/$partId'
     | '/library/'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   CommunityGuidelinesRoute: typeof CommunityGuidelinesRoute
   CopyrightPolicyRoute: typeof CopyrightPolicyRoute
   RequestsRoute: typeof RequestsRoute
+  SearchWebRoute: typeof SearchWebRoute
   UploadRoute: typeof UploadRoute
   LibraryPartIdRoute: typeof LibraryPartIdRoute
   LibraryIndexRoute: typeof LibraryIndexRoute
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/search-web': {
+      id: '/search-web'
+      path: '/search-web'
+      fullPath: '/search-web'
+      preLoaderRoute: typeof SearchWebRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/upload': {
       id: '/upload'
       path: '/upload'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityGuidelinesRoute: CommunityGuidelinesRoute,
   CopyrightPolicyRoute: CopyrightPolicyRoute,
   RequestsRoute: RequestsRoute,
+  SearchWebRoute: SearchWebRoute,
   UploadRoute: UploadRoute,
   LibraryPartIdRoute: LibraryPartIdRoute,
   LibraryIndexRoute: LibraryIndexRoute,
