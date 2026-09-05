@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const nameMatches = (claim: string, onRecord: string | null | undefined) =>
   !!onRecord && claim.trim().toLowerCase() === onRecord.trim().toLowerCase();
@@ -113,4 +114,41 @@ export const revealPrivateFulfillment = createServerFn({ method: "POST" })
       if (signed) files.push({ name: entry.name ?? entry.path, url: signed.signedUrl });
     }
     return { ok: true as const, partName: part.name, isPrivate: part.status === "private_fulfillment", files };
+  });
+
+/**
+ * Contact details are not readable through the public API (column-level grant
+ * revoked). Only the original poster (name-match soft gate) can read them here.
+ */
+export const revealRequestContact = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ requestId: z.string(), requesterName: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("requests")
+      .select("requester_name, requester_contact")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (!row) throw new Error("Request not found");
+    if (!nameMatches(data.requesterName, row.requester_name)) return { ok: false as const };
+    return { ok: true as const, contact: row.requester_contact };
+  });
+
+/** Admins can read contact details for any request. */
+export const adminGetRequestContact = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ requestId: z.string() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { requireAdmin } = await import("./admin-role.server");
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("requests")
+      .select("requester_contact")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (!row) throw new Error("Request not found");
+    return { ok: true as const, contact: row.requester_contact };
   });
