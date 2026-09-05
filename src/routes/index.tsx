@@ -93,6 +93,26 @@ function Index() {
         </div>
       </section>
 
+      <section className="mx-auto w-full max-w-6xl px-5 pb-20">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">What Zenthi does</h2>
+        <div className="mt-8 grid gap-px overflow-hidden rounded-sm border border-border bg-border sm:grid-cols-2">
+          {CAPABILITIES.map((c) => (
+            <div key={c.title} className="bg-card p-6">
+              <h3 className="font-display text-lg font-semibold">{c.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.body}</p>
+              {c.to ? (
+                <Link
+                  to={c.to}
+                  className="mt-4 inline-flex text-sm font-medium text-brass underline underline-offset-4"
+                >
+                  {c.cta}
+                </Link>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="mx-auto w-full max-w-6xl px-5 pb-4">
         <div className="rounded-sm border border-border bg-card p-8">
           <p className="tech-label">Scope</p>
