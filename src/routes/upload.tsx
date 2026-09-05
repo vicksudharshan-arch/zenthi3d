@@ -205,6 +205,100 @@ function UploadPage() {
   const [submittedStatus, setSubmittedStatus] = useState<string>("pending");
   const [statuses, setStatuses] = useState<Record<string, FileStatus>>({});
   const uploadedRef = useRef<Record<string, string>>({});
+  const [draftNotice, setDraftNotice] = useState(false);
+  const draftReadyRef = useRef(false);
+
+  // Restore any saved draft once, on mount (text/select fields only — files
+  // can't be persisted in localStorage and must be re-attached).
+  useEffect(() => {
+    const draft = loadUploadDraft();
+    if (draft) {
+      setName(draft.name ?? "");
+      setDescription(draft.description ?? "");
+      setUploader(draft.uploader ?? "");
+      setContributorTypes(draft.contributorTypes ?? []);
+      setCategory((draft.category as Category) ?? "bracket_mount");
+      setReferenceOnly(!!draft.referenceOnly);
+      setPlacement(draft.placement ?? "");
+      setMaterial(draft.material ?? "");
+      setThickness(draft.thickness ?? "");
+      setVehicles(draft.vehicles?.length ? draft.vehicles : [emptyVehicle()]);
+      setOemNumbers(draft.oemNumbers ?? "");
+      setAftermarket(
+        draft.aftermarket?.length ? draft.aftermarket : [{ brand: "", number: "" }],
+      );
+      setNotes(draft.notes ?? "");
+      setOrigin(draft.origin ?? "zenthi");
+      setVisibility(draft.visibility ?? "public_reviewed");
+      setSourceLink(draft.sourceLink ?? "");
+      setLicenseType(draft.licenseType ?? "");
+      setOriginalCreator(draft.originalCreator ?? "");
+      setOriginalLicense(draft.originalLicense ?? "");
+      setModificationNotes(draft.modificationNotes ?? "");
+      setDraftNotice(true);
+    }
+    draftReadyRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fade the "draft restored" notice after a few seconds.
+  useEffect(() => {
+    if (!draftNotice) return;
+    const t = setTimeout(() => setDraftNotice(false), 8000);
+    return () => clearTimeout(t);
+  }, [draftNotice]);
+
+  // Debounced autosave of the form's text/select state.
+  useEffect(() => {
+    if (!draftReadyRef.current || done) return;
+    const t = setTimeout(() => {
+      saveUploadDraft({
+        name,
+        description,
+        uploader,
+        contributorTypes,
+        category,
+        referenceOnly,
+        placement,
+        material,
+        thickness,
+        vehicles,
+        oemNumbers,
+        aftermarket,
+        notes,
+        origin,
+        visibility,
+        sourceLink,
+        licenseType,
+        originalCreator,
+        originalLicense,
+        modificationNotes,
+      });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [
+    name,
+    description,
+    uploader,
+    contributorTypes,
+    category,
+    referenceOnly,
+    placement,
+    material,
+    thickness,
+    vehicles,
+    oemNumbers,
+    aftermarket,
+    notes,
+    origin,
+    visibility,
+    sourceLink,
+    licenseType,
+    originalCreator,
+    originalLicense,
+    modificationNotes,
+    done,
+  ]);
 
   const hasAnyFile = stepFiles.length > 0 || stlFiles.length > 0 || extraFiles.length > 0;
   const encourageReference = SAFETY_SENSITIVE_CATEGORIES.includes(category);
