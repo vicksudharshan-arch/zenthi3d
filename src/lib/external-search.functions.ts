@@ -53,7 +53,10 @@ function buildQuery(f: ExternalFilters): { query: string; required: string[] } {
   const parts = [
     clean(f.make),
     clean(f.model),
+    clean(f.yearFrom),
+    clean(f.yearTo) && clean(f.yearTo) !== clean(f.yearFrom) ? clean(f.yearTo) : "",
     clean(f.generation),
+
     clean(f.engineMake),
     clean(f.engineSeries),
     clean(f.displacement),
