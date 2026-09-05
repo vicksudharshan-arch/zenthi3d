@@ -42,6 +42,33 @@ const STEPS = [
   },
 ];
 
+const CAPABILITIES: Array<{ title: string; body: string; to?: string; cta?: string }> = [
+  {
+    title: "A searchable parts library",
+    body: "Free downloads, catalogued by make, model, year range, engine and category. STEP, STL, OBJ, PLY, DXF, SVG, PDF and DWG, with in-browser previews.",
+    to: "/library",
+    cta: "Browse the library",
+  },
+  {
+    title: "Upload with proper credit",
+    body: "Original, re-shared or modified files all welcome. Fitment details, part numbers, material and print notes, plus source and licence tracking. Everything is reviewed before it goes public.",
+    to: "/upload",
+    cta: "Upload a file",
+  },
+  {
+    title: "A request board",
+    body: "Can't find a part? Post it and someone with a scanner or CAD skills can claim it. When their file is approved, the request is marked fulfilled automatically.",
+    to: "/requests",
+    cta: "See open requests",
+  },
+  {
+    title: "Search the web",
+    body: "Search other model sites by the same fitment filters — no keyword collisions. You get the title, thumbnail, licence and a link to the original listing; Zenthi never rehosts the file.",
+    to: "/search-web",
+    cta: "Search the web",
+  },
+];
+
 function Index() {
   return (
     <SiteShell>
@@ -88,6 +115,26 @@ function Index() {
               <span className="font-mono text-xs tracking-widest text-brass">{s.no}</span>
               <h3 className="mt-3 font-display text-xl font-semibold">{s.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-5 pb-20">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">What Zenthi does</h2>
+        <div className="mt-8 grid gap-px overflow-hidden rounded-sm border border-border bg-border sm:grid-cols-2">
+          {CAPABILITIES.map((c) => (
+            <div key={c.title} className="bg-card p-6">
+              <h3 className="font-display text-lg font-semibold">{c.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.body}</p>
+              {c.to ? (
+                <Link
+                  to={c.to}
+                  className="mt-4 inline-flex text-sm font-medium text-brass underline underline-offset-4"
+                >
+                  {c.cta}
+                </Link>
+              ) : null}
             </div>
           ))}
         </div>
