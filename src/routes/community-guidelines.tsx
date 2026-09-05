@@ -95,6 +95,14 @@ function GuidelinesPage() {
               drawings. STEP is preferred where you have it.
             </li>
             <li>
+              Zenthi is not for trinkets or purely aesthetic/decorative items — we're looking for
+              real functionality. The goal is to cut through the noise of the broader 3D-printing
+              community (which is dominated by novelty items) and build something genuinely useful.
+              Examples of what wouldn't be accepted: a rose-shaped cup holder insert, keychains,
+              phone holders, decorative shift knobs, novelty coasters, or anything whose primary
+              purpose is looks rather than solving a real fitment, repair, or fabrication problem.
+            </li>
+            <li>
               Safety-critical items (brakes, suspension, structural, fuel-carrying) are welcome as
               reference and fitment data only. Printed polymer has no business holding a car
               together or containing fuel.
