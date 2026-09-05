@@ -3,9 +3,9 @@ import { z } from "zod";
 import { CATEGORY_LABELS, type Category } from "@/lib/parts";
 
 /**
- * Metadata-only discovery across other model sites. Zenthi never downloads,
- * stores or rehosts a file — only the title, thumbnail, licence text and a
- * link back to the original listing.
+ * Metadata-only discovery through the Brave Search API. Zenthi never
+ * downloads, stores or rehosts a file — only the title, snippet, source
+ * domain and a link back to the original page.
  */
 
 const filterSchema = z.object({
@@ -27,17 +27,17 @@ export type ExternalFilters = z.infer<typeof filterSchema>;
 export type ExternalResult = {
   id: string;
   title: string;
+  snippet: string | null;
   thumbnail: string | null;
   source: string;
   sourceUrl: string;
-  license: string | null;
-  author: string | null;
 };
 
 export type ExternalSearchResponse = {
   results: ExternalResult[];
   notices: string[];
   query: string;
+  configured: boolean;
 };
 
 function clean(v?: string): string {
@@ -46,151 +46,145 @@ function clean(v?: string): string {
 
 /** Structured fields become an explicitly automotive query, which is what stops
  *  "Golf Mk2" from returning golf clubs. */
-function buildQuery(f: ExternalFilters): { query: string; required: string[] } {
+function buildQuery(f: ExternalFilters): string {
   const category = clean(f.category);
   const categoryLabel =
     category && category in CATEGORY_LABELS ? CATEGORY_LABELS[category as Category] : "";
+
+  const yearFrom = clean(f.yearFrom);
+  const yearTo = clean(f.yearTo);
+  const years = yearFrom && yearTo && yearTo !== yearFrom ? `${yearFrom}-${yearTo}` : yearFrom || yearTo;
+
+  const engine = [clean(f.engineMake), clean(f.engineSeries), clean(f.displacement)]
+    .filter(Boolean)
+    .join(" ");
+
   const parts = [
     clean(f.make),
     clean(f.model),
-    clean(f.yearFrom),
-    clean(f.yearTo) && clean(f.yearTo) !== clean(f.yearFrom) ? clean(f.yearTo) : "",
     clean(f.generation),
-
-    clean(f.engineMake),
-    clean(f.engineSeries),
-    clean(f.displacement),
+    years,
+    engine,
     clean(f.drivetrain),
     categoryLabel,
     clean(f.keyword),
   ].filter(Boolean);
 
-  const required = [clean(f.make), clean(f.model)].filter(Boolean).map((s) => s.toLowerCase());
-  return { query: [...parts, "car part"].join(" "), required };
+  if (parts.length === 0) return "";
+  return `${parts.join(" ")} car part 3D model STL STEP CAD`;
 }
 
-function matchesFitment(text: string, required: string[]): boolean {
-  if (required.length === 0) return true;
-  const haystack = text.toLowerCase();
-  return required.every((token) => haystack.includes(token));
-}
-
-async function searchSketchfab(
-  query: string,
-  required: string[],
-): Promise<{ results: ExternalResult[]; notice?: string }> {
-  const url = new URL("https://api.sketchfab.com/v3/search");
-  url.searchParams.set("type", "models");
-  url.searchParams.set("q", query);
-  url.searchParams.set("count", "24");
+function domainOf(url: string): string {
   try {
-    const res = await fetch(url.toString(), { headers: { Accept: "application/json" } });
-    if (!res.ok) {
-      return { results: [], notice: `Sketchfab did not respond (status ${res.status}).` };
-    }
-    const json = (await res.json()) as {
-      results?: Array<{
-        uid: string;
-        name?: string;
-        description?: string;
-        viewerUrl?: string;
-        thumbnails?: { images?: Array<{ url: string; width: number }> };
-        license?: { label?: string } | null;
-        user?: { displayName?: string } | null;
-      }>;
-    };
-    const results = (json.results ?? [])
-      .filter((m) => matchesFitment(`${m.name ?? ""} ${m.description ?? ""}`, required))
-      .map((m) => {
-        const images = [...(m.thumbnails?.images ?? [])].sort((a, b) => a.width - b.width);
-        const thumb = images.find((i) => i.width >= 400) ?? images[images.length - 1];
-        return {
-          id: `sketchfab:${m.uid}`,
-          title: m.name ?? "Untitled model",
-          thumbnail: thumb?.url ?? null,
-          source: "Sketchfab",
-          sourceUrl: m.viewerUrl ?? `https://sketchfab.com/3d-models/${m.uid}`,
-          license: m.license?.label ?? null,
-          author: m.user?.displayName ?? null,
-        } satisfies ExternalResult;
-      });
-    return { results };
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return { results: [], notice: "Sketchfab could not be reached." };
+    return "unknown source";
   }
 }
 
-async function searchThingiverse(
-  query: string,
-  required: string[],
-): Promise<{ results: ExternalResult[]; notice?: string }> {
-  const token = process.env['THINGIVERSE_APP_TOKEN'];
-  if (!token) {
-    return {
-      results: [],
-      notice:
-        "Thingiverse is not connected yet — it needs a free developer app token before its results can appear.",
-    };
-  }
-  const url = new URL(`https://api.thingiverse.com/search/${encodeURIComponent(query)}`);
-  url.searchParams.set("type", "things");
-  url.searchParams.set("per_page", "24");
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    });
-    if (!res.ok) {
-      return { results: [], notice: `Thingiverse did not respond (status ${res.status}).` };
-    }
-    const json = (await res.json()) as {
-      hits?: Array<{
-        id: number;
-        name?: string;
-        description?: string;
-        public_url?: string;
-        thumbnail?: string;
-        preview_image?: string;
-        license?: string;
-        creator?: { name?: string } | null;
-      }>;
-    };
-    const results = (json.hits ?? [])
-      .filter((h) => matchesFitment(`${h.name ?? ""} ${h.description ?? ""}`, required))
-      .map(
-        (h) =>
-          ({
-            id: `thingiverse:${h.id}`,
-            title: h.name ?? "Untitled thing",
-            thumbnail: h.preview_image ?? h.thumbnail ?? null,
-            source: "Thingiverse",
-            sourceUrl: h.public_url ?? `https://www.thingiverse.com/thing:${h.id}`,
-            license: h.license ?? null,
-            author: h.creator?.name ?? null,
-          }) satisfies ExternalResult,
-      );
-    return { results };
-  } catch {
-    return { results: [], notice: "Thingiverse could not be reached." };
-  }
+function stripTags(html?: string): string | null {
+  if (!html) return null;
+  const text = html.replace(/<[^>]*>/g, "").trim();
+  return text.length > 0 ? text : null;
 }
 
 export const searchExternalSources = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => filterSchema.parse(data))
   .handler(async ({ data }): Promise<ExternalSearchResponse> => {
-    const { query, required } = buildQuery(data);
-    if (query.trim() === "car part") {
-      return { results: [], notices: ["Pick at least one filter to search."], query: "" };
+    const query = buildQuery(data);
+    if (!query) {
+      return {
+        results: [],
+        notices: ["Pick at least one filter to search."],
+        query: "",
+        configured: true,
+      };
     }
 
-    const [sketchfab, thingiverse] = await Promise.all([
-      searchSketchfab(query, required),
-      searchThingiverse(query, required),
-    ]);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("app_secrets")
+      .select("key_value")
+      .eq("key_name", "brave_search_api_key")
+      .maybeSingle();
 
-    const notices = [sketchfab.notice, thingiverse.notice].filter(Boolean) as string[];
-    return {
-      results: [...sketchfab.results, ...thingiverse.results],
-      notices,
-      query,
-    };
+    const apiKey = (row?.key_value ?? "").trim();
+    if (!apiKey) {
+      return { results: [], notices: [], query, configured: false };
+    }
+
+    const url = new URL("https://api.search.brave.com/res/v1/web/search");
+    url.searchParams.set("q", query);
+    url.searchParams.set("count", "20");
+    url.searchParams.set("safesearch", "moderate");
+
+    try {
+      const res = await fetch(url.toString(), {
+        headers: {
+          Accept: "application/json",
+          "Accept-Encoding": "gzip",
+          "X-Subscription-Token": apiKey,
+        },
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        return {
+          results: [],
+          notices: ["The saved search key was rejected. It may need to be updated."],
+          query,
+          configured: true,
+        };
+      }
+      if (res.status === 429) {
+        return {
+          results: [],
+          notices: ["Too many searches right now — wait a moment and try again."],
+          query,
+          configured: true,
+        };
+      }
+      if (!res.ok) {
+        return {
+          results: [],
+          notices: [`Search did not respond (status ${res.status}).`],
+          query,
+          configured: true,
+        };
+      }
+
+      const json = (await res.json()) as {
+        web?: {
+          results?: Array<{
+            title?: string;
+            url?: string;
+            description?: string;
+            thumbnail?: { src?: string } | null;
+            meta_url?: { hostname?: string } | null;
+          }>;
+        };
+      };
+
+      const results = (json.web?.results ?? [])
+        .filter((r) => typeof r.url === "string" && r.url.length > 0)
+        .map((r, i) => {
+          const sourceUrl = r.url as string;
+          return {
+            id: `brave:${i}:${sourceUrl}`,
+            title: stripTags(r.title) ?? sourceUrl,
+            snippet: stripTags(r.description),
+            thumbnail: r.thumbnail?.src ?? null,
+            source: r.meta_url?.hostname?.replace(/^www\./, "") ?? domainOf(sourceUrl),
+            sourceUrl,
+          } satisfies ExternalResult;
+        });
+
+      return { results, notices: [], query, configured: true };
+    } catch {
+      return {
+        results: [],
+        notices: ["The search service could not be reached. Try again shortly."],
+        query,
+        configured: true,
+      };
+    }
   });
