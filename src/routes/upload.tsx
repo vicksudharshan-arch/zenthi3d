@@ -547,6 +547,7 @@ function UploadPage() {
       if (requestId && inserted?.id && submissionStatus !== "pending") {
         await finalizeRequestFulfillment({ data: { requestId, partId: inserted.id } });
       }
+      clearUploadDraft();
       setSubmittedStatus(submissionStatus);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -616,6 +617,22 @@ function UploadPage() {
           Those are valuable as fitment and measurement references even when they shouldn't be
           fabricated as functional replacements.
         </p>
+
+        {draftNotice && (
+          <div className="mt-6 flex items-start justify-between gap-4 rounded-sm border border-border bg-card px-4 py-3">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Draft restored — please re-attach your files. Your progress saves automatically as
+              you type.
+            </p>
+            <button
+              type="button"
+              onClick={() => setDraftNotice(false)}
+              className="shrink-0 font-mono text-[0.65rem] tracking-widest text-muted-foreground uppercase hover:text-foreground"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-10">
           {requestId && (
