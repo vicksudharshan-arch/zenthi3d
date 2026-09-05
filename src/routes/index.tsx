@@ -42,6 +42,33 @@ const STEPS = [
   },
 ];
 
+const CAPABILITIES: Array<{ title: string; body: string; to?: string; cta?: string }> = [
+  {
+    title: "A searchable parts library",
+    body: "Free downloads, catalogued by make, model, year range, engine and category. STEP, STL, OBJ, PLY, DXF, SVG, PDF and DWG, with in-browser previews.",
+    to: "/library",
+    cta: "Browse the library",
+  },
+  {
+    title: "Upload with proper credit",
+    body: "Original, re-shared or modified files all welcome. Fitment details, part numbers, material and print notes, plus source and licence tracking. Everything is reviewed before it goes public.",
+    to: "/upload",
+    cta: "Upload a file",
+  },
+  {
+    title: "A request board",
+    body: "Can't find a part? Post it and someone with a scanner or CAD skills can claim it. When their file is approved, the request is marked fulfilled automatically.",
+    to: "/requests",
+    cta: "See open requests",
+  },
+  {
+    title: "Search the web",
+    body: "Search other model sites by the same fitment filters — no keyword collisions. You get the title, thumbnail, licence and a link to the original listing; Zenthi never rehosts the file.",
+    to: "/search-web",
+    cta: "Search the web",
+  },
+];
+
 function Index() {
   return (
     <SiteShell>
