@@ -22,14 +22,44 @@ export const Route = createFileRoute("/community-guidelines")({
   component: GuidelinesPage,
 });
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="mt-12 border-t border-border pt-10">
+    <section id={id} className="mt-12 border-t border-border pt-10">
       <h2 className="font-display text-2xl font-semibold tracking-tight">{title}</h2>
       <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">
         {children}
       </div>
     </section>
+  );
+}
+
+const SECTIONS = [
+  { id: "what-can-be-uploaded", label: "What can be uploaded" },
+  { id: "what-admins-check", label: "What admins check before approving" },
+  { id: "admin-conduct", label: "Admin conduct expectations" },
+  { id: "how-to-become-an-admin", label: "How to become an admin" },
+];
+
+function AnchorLink({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={`#${id}`}
+      onClick={(e) => {
+        e.preventDefault();
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }}
+      className="underline underline-offset-4 hover:text-foreground"
+    >
+      {children}
+    </a>
   );
 }
 
@@ -45,7 +75,20 @@ function GuidelinesPage() {
           Zenthi is community-run. These are the standards uploaders and admins work to.
         </p>
 
-        <Section title="What can be uploaded">
+        <section className="mt-10">
+          <h2 className="font-display text-xl font-semibold tracking-tight">What's here</h2>
+          <nav aria-label="Community guidelines sections">
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              {SECTIONS.map((item) => (
+                <li key={item.id}>
+                  <AnchorLink id={item.id}>{item.label}</AnchorLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </section>
+
+        <Section id="what-can-be-uploaded" title="What can be uploaded">
           <ul className="list-disc space-y-2 pl-5">
             <li>
               Any car-related part file — 3D print models, scans, cutting profiles, and 2D
@@ -70,7 +113,7 @@ function GuidelinesPage() {
           </ul>
         </Section>
 
-        <Section title="What admins check before approving">
+        <Section id="what-admins-check" title="What admins check before approving">
           <ul className="list-disc space-y-2 pl-5">
             <li>The category matches what the part actually is.</li>
             <li>Fitment data is present and plausible — make, model, year range, engine details.</li>
@@ -81,7 +124,7 @@ function GuidelinesPage() {
           </ul>
         </Section>
 
-        <Section title="Admin conduct">
+        <Section id="admin-conduct" title="Admin conduct expectations">
           <ul className="list-disc space-y-2 pl-5">
             <li>Don't approve your own submissions — leave them for another admin.</li>
             <li>Act in good faith; approve on the merits, not on who uploaded it.</li>
@@ -92,12 +135,16 @@ function GuidelinesPage() {
           </ul>
         </Section>
 
-        <Section title="How to become an admin">
+        <Section id="how-to-become-an-admin" title="How to become an admin">
           <p>
             Create an account, then submit a short request explaining why you'd be a good reviewer —
             your background with car parts, CAD, scanning, or moderating communities. An existing
             admin reviews the request and either grants the admin role or declines it. You'll see
-            the status on your account page. You do not need an account to browse or upload.
+            the status on your account page.
+          </p>
+          <p>
+            You don't need an account to browse the library or use the search engine — accounts are
+            only needed for uploading, posting or fulfilling requests, and admin actions.
           </p>
           <p>
             <Link
