@@ -720,8 +720,18 @@ function EditDialog({
           className="mt-6 space-y-5"
           onSubmit={(e) => {
             e.preventDefault();
+            const clean = vehicles.filter((v) => v.make.trim() || v.model.trim());
+            if (clean.some((v) => isRestrictedMake(v.make))) {
+              toast.error(RESTRICTED_MAKE_MESSAGE);
+              return;
+            }
+            if (clean.some((v) => !v.make.trim() || !v.model.trim())) {
+              toast.error("Every vehicle needs at least a make and a model.");
+              return;
+            }
             save.mutate();
           }}
+
         >
           <div>
             <label className={labelCls} htmlFor="edit-name">
