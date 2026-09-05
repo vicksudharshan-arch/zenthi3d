@@ -262,7 +262,16 @@ function SearchWebPage() {
           </ul>
         ) : null}
 
-        {data && (
+        {data && !data.configured && (
+          <div className="mt-8 rounded-sm border border-brass/30 bg-brass/5 p-6">
+            <p className="tech-label text-brass">Not ready yet</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Search is not yet configured — check back soon.
+            </p>
+          </div>
+        )}
+
+        {data?.configured && (
           <section className="mt-10">
             <h2 className="font-display text-2xl font-semibold tracking-tight">
               {data.results.length} result{data.results.length === 1 ? "" : "s"}
