@@ -72,9 +72,9 @@ function SearchWebPage() {
           Search the web
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Look for an existing model on other sites using the same fitment filters as the library.
-          Zenthi only shows the title, thumbnail, licence and a link to the original listing — the
-          file itself is never downloaded, stored or rehosted here.
+          Look for an existing model anywhere on the web using the same fitment filters as the
+          library. Zenthi only shows the title, a short snippet, the site it came from and a link to
+          the original page — the file itself is never downloaded, stored or rehosted here.
         </p>
 
         <form
