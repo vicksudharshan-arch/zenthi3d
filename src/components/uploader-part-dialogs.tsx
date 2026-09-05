@@ -10,8 +10,11 @@ import {
   CONTRIBUTOR_TYPES,
   CONTRIBUTOR_TYPE_LABELS,
   emptyVehicle,
+  isRestrictedMake,
+  RESTRICTED_MAKE_MESSAGE,
   type AftermarketPartNumber,
   type Vehicle,
+
 } from "@/lib/parts";
 import {
   deletePartAsUploader,
