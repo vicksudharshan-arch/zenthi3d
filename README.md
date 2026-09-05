@@ -1,50 +1,27 @@
-# Scarpa Parts Vault
-
-Build "Scarpa" — a free, open-source-style library for 3D-printable car part files (brackets, housings, covers, trim — non-safety-critical parts only), aimed at car enthusiasts, restorers, and DIY builders working on high-performance and exotic cars (Porsche, Lamborghini, Ferrari, etc.).
-
-Core features for this MVP:
-
-1. HOMEPAGE
-- Clean, technical/engineering aesthetic (think blueprint/workshop, not flashy). Warm off-white background, deep graphite text, a muted engineering blue and a brass/amber accent color. Pair a distinctive serif display font (like Fraunces) with a clean technical sans (like IBM Plex Sans), and use a monospace font for part numbers/technical data.
-- Headline: "A shared library of 3D-printable parts for cars nobody else supports."
-- Subhead explaining: enthusiasts already figure out how to adapt and fabricate rare parts for exotic and high-performance cars — this is a place to share those solved problems instead of losing them in old forum threads.
-- Clear CTA: "Browse the library" and "Upload a file"
-
-2. UPLOAD FLOW
-- Fields: part name, description, vehicle(s) it fits (make, model, year range — allow multiple), category (bracket / housing / cover / trim / other — explicitly NOT brakes/suspension/structural/fuel system), file upload (accept STL and STEP formats), optional notes on how they solved the problem (like a forum writeup)
-- Required checkbox before submitting: "I created this file or have the right to share it, and I grant Scarpa a license to host and redistribute it under [Creative Commons Attribution license]." Do not let submission proceed without this checked.
-- After submission, show a message: "Thanks — this is queued for a quick review before it goes live."
-- Store submissions with a status field defaulting to "pending" — do NOT show pending items in the public library yet, only approved ones. Include a simple internal admin view (e.g. at /admin, no auth needed for this MVP) where I can see all pending submissions and approve or reject them.
-
-3. LIBRARY / BROWSE PAGE
-- Grid or list of approved files only, filterable by vehicle make/model and category
-- Each listing shows: part name, vehicle fitment, category, uploader's notes/writeup, download button
-- Empty state message when there's nothing yet: "Nothing here yet — be the first to share a fix."
-
-4. LEGAL / FOOTER
-- Simple disclaimer footer: "Files are shared by the community and are for non-safety-critical parts only. Verify fit and function before use. Scarpa does not guarantee fitment or safety."
-
-Set up a database (Supabase) to actually store submissions and files persistently. Keep this scoped as a lean MVP — no user accounts/login required yet, just the upload form, admin review, and public library.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://zenthi3d.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/42f80507-2bce-498a-8440-39af4b9d99ab).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+Zenthi
+Rare parts. Real fixes. Built from scratch.
+Zenthi is a free, community-run archive of car-part files — retrofits, fixes, and hard-to-find parts for any vehicle. The hardest, most inventive fixes tend to come from high-performance and exotic builds pushing into territory nobody else supports, but the same spirit applies to any car with a rare problem to solve: a discontinued clip for a daily driver is just as welcome as a one-off fix for an exotic.
+Completely free. No paywall. If you’ve ever solved an obscure fitment problem yourself, this is a place to put it where the next person doesn’t have to start from zero.
+What it does
+	•	Library — browse and download community-submitted files, filterable by make, model, year, engine, drivetrain, and category.
+	•	Upload — submit a file (STEP, STL, OBJ, PLY, DXF, SVG, PDF, native CAD, and more), tag vehicle fitment, note material/thickness, and credit the original source if you’re reuploading or modifying someone else’s work.
+	•	Requests board — post a part you need scanned or modeled; others can fulfill it (publicly, reviewed, or privately to you). No payment processing — any financial agreement between users happens off-platform.
+	•	Search the web — structured fitment search across external sources (via the Brave Search API), returning titles, snippets, and links only. Zenthi never downloads, stores, or rehosts files it doesn’t have direct permission for.
+Licensing & attribution
+Every upload requires an explicit license choice (CC0, CC BY, CC BY-SA, CC BY-NC, CC BY-ND, or CC BY-NC-ND) and honest sourcing:
+	•	Original work — licensed CC BY by default.
+	•	Reuploaded from elsewhere — requires a source link, the original license, and creator credit.
+	•	Modified from someone else’s file — requires the same, plus a description of what changed. Submissions are blocked outright if the original license doesn’t permit derivatives (ND variants), and ShareAlike (SA) licenses propagate automatically to the new upload.
+See /copyright-policy for the full takedown process.
+Scope & safety
+Nothing is restricted by vehicle type or part category — but safety-critical parts (brakes, suspension, structural, fuel system) are explicitly framed as fitment reference only, not a verified functional replacement. See the homepage and footer disclaimer for the full framing.
+Honda/Acura and Stellantis-brand vehicles (Chrysler, Dodge, Jeep, Ram, Fiat, Alfa Romeo, Peugeot, Citroën, Opel, Vauxhall, Lancia, Abarth) are currently not supported, due to a documented history of aggressive legal action against community fitment files from these manufacturers.
+Community governance
+Zenthi is moving toward being community-run. Anyone can create an account (email/password, GitHub, or Google) to upload, post requests, or fulfill them. Admin access is granted by request — existing admins review and approve new admin requests; nobody can self-promote. See /community-guidelines for what’s expected of contributors and admins.
+Tech stack
+	•	Frontend: React, TanStack Router/Start
+	•	Backend: Supabase (Postgres, Auth, Storage, Row-Level Security)
+	•	Search: Brave Search API
+	•	Hosting/build: Lovable
+Contributing
+Upload a file, post a request, or just browse. If you find a bug or have a suggestion, open an issue. This project was shaped almost entirely by real user feedback — keep it coming.
