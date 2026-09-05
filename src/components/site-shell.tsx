@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { getMyAccess } from "@/lib/admin-access.functions";
 
 function Wordmark() {
   return (
@@ -9,6 +11,26 @@ function Wordmark() {
         Zenthi
       </span>
       <span className="tech-label hidden sm:inline">Open parts library</span>
+    </Link>
+  );
+}
+
+function AdminLink() {
+  const { session, loading } = useAuth();
+  const access = useQuery({
+    queryKey: ["access", "me"],
+    queryFn: () => getMyAccess(),
+    enabled: !!session && !loading,
+  });
+
+  if (loading || !session || !access.data?.isAdmin) return null;
+
+  return (
+    <Link
+      to="/admin"
+      className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+    >
+      Admin
     </Link>
   );
 }
@@ -75,6 +97,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             >
               Upload
             </Link>
+            <AdminLink />
             <AccountNav />
           </nav>
 
