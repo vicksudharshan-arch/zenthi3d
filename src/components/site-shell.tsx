@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 function Wordmark() {
   return (
@@ -11,6 +12,31 @@ function Wordmark() {
     </Link>
   );
 }
+
+function AccountNav() {
+  const { email, loading } = useAuth();
+  if (loading) return null;
+  if (!email) {
+    return (
+      <Link
+        to="/auth"
+        className="rounded-sm px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+      >
+        Sign in
+      </Link>
+    );
+  }
+  return (
+    <Link
+      to="/account"
+      className="max-w-[10rem] truncate rounded-sm border border-border px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground [&.active]:text-foreground"
+      title={email}
+    >
+      {email}
+    </Link>
+  );
+}
+
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
@@ -43,8 +69,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
             >
               Upload
             </Link>
-
+            <AccountNav />
           </nav>
+
         </div>
       </header>
 
@@ -69,8 +96,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </div>
           <p className="mt-8 font-mono text-xs text-muted-foreground">
             Uploads licensed CC BY 4.0 ·{" "}
+            <Link to="/community-guidelines" className="underline underline-offset-2 hover:text-foreground">
+              Community guidelines
+            </Link>{" "}
+            ·{" "}
             <Link to="/copyright-policy" className="underline underline-offset-2 hover:text-foreground">
               Report a copyright concern
+
             </Link>
           </p>
           <p className="mt-4 max-w-3xl text-xs leading-relaxed text-muted-foreground">

@@ -28,11 +28,19 @@ import {
   updatePart,
   type PartRow,
 } from "@/lib/parts.functions";
-import { getAdminGateState, lockAdmin, unlockAdmin } from "@/lib/admin-gate.functions";
+import {
+  getMyAccess,
+  listAdminRequests,
+  reviewAdminRequest,
+} from "@/lib/admin-access.functions";
 import { listCopyrightReports, setCopyrightReportStatus } from "@/lib/copyright.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Link, useRouter } from "@tanstack/react-router";
 
 
 export const Route = createFileRoute("/admin")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Review queue — Zenthi" },
@@ -50,30 +58,27 @@ export const Route = createFileRoute("/admin")({
   component: AdminGate,
 });
 
+function GateShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SiteShell>
+      <div className="mx-auto max-w-md px-6 py-24">
+        <p className="tech-label text-brass">Restricted</p>
+        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Review queue</h1>
+        {children}
+      </div>
+    </SiteShell>
+  );
+}
+
 function AdminGate() {
-  const qc = useQueryClient();
-  const [passcode, setPasscode] = useState("");
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "gate"],
-    queryFn: () => getAdminGateState(),
+  const { session, loading } = useAuth();
+  const access = useQuery({
+    queryKey: ["access", "me"],
+    queryFn: () => getMyAccess(),
+    enabled: !!session,
   });
 
-  const unlock = useMutation({
-    mutationFn: () => unlockAdmin({ data: { passcode } }),
-    onSuccess: (res) => {
-      if (res.ok) {
-        setPasscode("");
-        qc.invalidateQueries({ queryKey: ["admin", "gate"] });
-      } else if (!res.configured) {
-        toast.error("No admin passcode is configured yet.");
-      } else {
-        toast.error("Incorrect passcode.");
-      }
-    },
-    onError: () => toast.error("Could not verify the passcode."),
-  });
-
-  if (isLoading) {
+  if (loading || (session && access.isLoading)) {
     return (
       <SiteShell>
         <div className="mx-auto max-w-md px-6 py-24 font-mono text-sm text-muted-foreground">
@@ -83,55 +88,52 @@ function AdminGate() {
     );
   }
 
-  if (!data?.unlocked) {
+  if (!session) {
     return (
-      <SiteShell>
-        <div className="mx-auto max-w-md px-6 py-24">
-          <p className="tech-label text-brass">Restricted</p>
-          <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Review queue</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Enter the shared admin passcode to view and manage submissions.
-          </p>
-          {data && !data.configured && (
-            <p className="mt-4 rounded-sm border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              No admin passcode is configured in the database yet.
-            </p>
-          )}
-          <form
-            className="mt-6 space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (passcode) unlock.mutate();
-            }}
+      <GateShell>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          This area is for Zenthi admins. Sign in with your account to continue.
+        </p>
+        <Link
+          to="/auth"
+          className="mt-6 inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Sign in
+        </Link>
+      </GateShell>
+    );
+  }
+
+  if (!access.data?.isAdmin) {
+    return (
+      <GateShell>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          You're signed in, but your account doesn't have the admin role yet.
+          {access.data?.request?.status === "pending"
+            ? " Your admin access request is pending review."
+            : " You can request admin access from your account page."}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            to="/account"
+            className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <div>
-              <label className={labelCls} htmlFor="passcode">
-                Admin passcode
-              </label>
-              <input
-                id="passcode"
-                type="password"
-                autoComplete="current-password"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className={fieldCls}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!passcode || unlock.isPending}
-              className="inline-flex h-11 items-center rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-            >
-              {unlock.isPending ? "Checking…" : "Unlock"}
-            </button>
-          </form>
+            Go to your account
+          </Link>
+          <Link
+            to="/community-guidelines"
+            className="inline-flex h-11 items-center rounded-sm border border-border px-6 text-sm font-medium hover:bg-secondary"
+          >
+            Community guidelines
+          </Link>
         </div>
-      </SiteShell>
+      </GateShell>
     );
   }
 
   return <AdminPage />;
 }
+
 
 const TABS = ["pending", "approved", "private_fulfillment", "rejected"] as const;
 
@@ -202,16 +204,9 @@ function AdminPage() {
               Review queue
             </h1>
           </div>
-          <button
-            onClick={async () => {
-              await lockAdmin();
-              qc.invalidateQueries({ queryKey: ["admin", "gate"] });
-            }}
-            className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
-          >
-            Lock
-          </button>
+          <SignOutButton />
         </div>
+
 
 
         <div className="mt-8 flex gap-1 border-b border-border">
@@ -362,7 +357,9 @@ function AdminPage() {
           </div>
         )}
 
+        <AdminRequests />
         <CopyrightReports />
+
       </div>
 
 
@@ -377,6 +374,115 @@ function AdminPage() {
         />
       )}
     </SiteShell>
+  );
+}
+
+function SignOutButton() {
+  const qc = useQueryClient();
+  const router = useRouter();
+  return (
+    <button
+      onClick={async () => {
+        await qc.cancelQueries();
+        qc.clear();
+        await supabase.auth.signOut();
+        void router.navigate({ to: "/auth", replace: true });
+      }}
+      className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+    >
+      Sign out
+    </button>
+  );
+}
+
+function AdminRequests() {
+  const qc = useQueryClient();
+  const [showAll, setShowAll] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-requests"],
+    queryFn: () => listAdminRequests(),
+  });
+
+  const review = useMutation({
+    mutationFn: (vars: { id: string; decision: "approved" | "denied" }) =>
+      reviewAdminRequest({ data: vars }),
+    onSuccess: (res, vars) => {
+      if (!res.ok) {
+        toast.error("That request was already reviewed.");
+      } else {
+        toast.success(vars.decision === "approved" ? "Admin access granted." : "Request denied.");
+      }
+      qc.invalidateQueries({ queryKey: ["admin-requests"] });
+    },
+    onError: () => toast.error("Could not update the request."),
+  });
+
+  const all = data ?? [];
+  const rows = showAll ? all : all.filter((r) => r.status === "pending");
+
+  return (
+    <section className="mt-20 border-t border-border pt-10">
+      <p className="tech-label">Access</p>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-2xl font-semibold tracking-tight">
+          Admin requests ({all.filter((r) => r.status === "pending").length} pending)
+        </h2>
+        <button
+          onClick={() => setShowAll((s) => !s)}
+          className="h-9 rounded-sm border border-border px-4 text-sm font-medium hover:bg-secondary"
+        >
+          {showAll ? "Show pending only" : "Show all"}
+        </button>
+      </div>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Approving grants the admin role immediately. Please weigh requests against the community
+        guidelines.
+      </p>
+
+      {isLoading ? (
+        <p className="mt-8 font-mono text-sm text-muted-foreground">Loading…</p>
+      ) : rows.length === 0 ? (
+        <p className="mt-8 font-mono text-sm text-muted-foreground">
+          No {showAll ? "" : "pending "}admin requests.
+        </p>
+      ) : (
+        <div className="mt-6 space-y-4">
+          {rows.map((r) => (
+            <article key={r.id} className="rounded-sm border border-border bg-card p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-display text-lg font-semibold">{r.email}</h3>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
+                    {new Date(r.created_at).toLocaleDateString()} · {r.status}
+                  </p>
+                </div>
+                {r.status === "pending" && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      disabled={review.isPending}
+                      onClick={() => review.mutate({ id: r.id, decision: "approved" })}
+                      className="h-9 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      disabled={review.isPending}
+                      onClick={() => review.mutate({ id: r.id, decision: "denied" })}
+                      className="h-9 rounded-sm border border-destructive/40 px-4 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                    >
+                      Deny
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="mt-4 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                {r.reason}
+              </p>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
