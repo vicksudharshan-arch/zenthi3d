@@ -163,7 +163,7 @@ export function UploaderEditDialog({
           material: material.trim() || null,
           thickness_infill: thickness.trim() || null,
           contributor_type: types,
-          vehicles: vehicles.filter((v) => v.make.trim() || v.model.trim()),
+          vehicles: cleanVehicles,
           oem_part_numbers: oemNumbers.trim() || null,
           aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
           notes: notes.trim() || null,
