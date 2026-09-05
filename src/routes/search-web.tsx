@@ -72,9 +72,9 @@ function SearchWebPage() {
           Search the web
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Look for an existing model on other sites using the same fitment filters as the library.
-          Zenthi only shows the title, thumbnail, licence and a link to the original listing — the
-          file itself is never downloaded, stored or rehosted here.
+          Look for an existing model anywhere on the web using the same fitment filters as the
+          library. Zenthi only shows the title, a short snippet, the site it came from and a link to
+          the original page — the file itself is never downloaded, stored or rehosted here.
         </p>
 
         <form
@@ -262,7 +262,16 @@ function SearchWebPage() {
           </ul>
         ) : null}
 
-        {data && (
+        {data && !data.configured && (
+          <div className="mt-8 rounded-sm border border-brass/30 bg-brass/5 p-6">
+            <p className="tech-label text-brass">Not ready yet</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Search is not yet configured — check back soon.
+            </p>
+          </div>
+        )}
+
+        {data?.configured && (
           <section className="mt-10">
             <h2 className="font-display text-2xl font-semibold tracking-tight">
               {data.results.length} result{data.results.length === 1 ? "" : "s"}
@@ -300,7 +309,6 @@ function ResultCard({ result }: { result: ExternalResult }) {
         title: result.title,
         thumbnail_url: result.thumbnail,
         source_site: result.source,
-        license: result.license,
         suggested_by: user.id,
       });
       if (error) throw error;
@@ -330,10 +338,11 @@ function ResultCard({ result }: { result: ExternalResult }) {
       <div className="flex flex-1 flex-col p-4">
         <p className="tech-label">{result.source}</p>
         <h3 className="mt-2 font-display text-base font-semibold leading-snug">{result.title}</h3>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {result.author ? `By ${result.author}` : "Author not listed"}
-          {result.license ? ` · ${result.license}` : ""}
-        </p>
+        {result.snippet ? (
+          <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-muted-foreground">
+            {result.snippet}
+          </p>
+        ) : null}
         <div className="mt-4 flex flex-wrap gap-2 pt-2">
           <a
             href={result.sourceUrl}

@@ -50,6 +50,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_secrets: {
+        Row: {
+          key_name: string
+          key_value: string
+          updated_at: string
+        }
+        Insert: {
+          key_name: string
+          key_value?: string
+          updated_at?: string
+        }
+        Update: {
+          key_name?: string
+          key_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       copyright_reports: {
         Row: {
           concern: string
