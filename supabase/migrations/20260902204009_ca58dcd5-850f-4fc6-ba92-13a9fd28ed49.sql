@@ -17,4 +17,5 @@ CREATE TRIGGER admin_config_set_updated_at
   BEFORE UPDATE ON public.admin_config
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
-INSERT INTO public.admin_config (passcode) VALUES ('zenthi2026');
+-- Seed passcode removed: admin_config auth was retired for role-based admin
+-- access (public.user_roles + has_role). Values must be set server-side only.
