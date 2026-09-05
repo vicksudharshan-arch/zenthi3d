@@ -61,7 +61,7 @@ type RequestRow = {
 };
 
 const REQUEST_COLUMNS =
-  "id,requester_name,requester_contact,part_description,file_type_needed,make,model,year_from,year_to,engine_manufacturer,engine_series,engine_displacement,generation,drivetrain,bounty_amount,status,fulfilled_part_id,created_at";
+  "id,requester_name,part_description,file_type_needed,make,model,year_from,year_to,engine_manufacturer,engine_series,engine_displacement,generation,drivetrain,bounty_amount,status,fulfilled_part_id,created_at";
 
 function fitmentLine(r: RequestRow) {
   const years = [r.year_from, r.year_to].filter(Boolean).join("–");
