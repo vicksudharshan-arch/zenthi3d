@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { finalizeRequestFulfillment, getRequestSummary } from "@/lib/requests.functions";
 import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
+import { AuthGate } from "@/components/auth-gate";
+import { useAuth } from "@/hooks/use-auth";
+
 import {
   AftermarketNumberFields,
   VehicleFitmentFields,
