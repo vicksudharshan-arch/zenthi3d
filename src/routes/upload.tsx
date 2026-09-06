@@ -550,17 +550,27 @@ function UploadPage() {
 
         license_accepted: true,
         status: submissionStatus,
-      }).select("id").maybeSingle();
+      });
       if (error) throw error;
-      if (requestId && inserted?.id && submissionStatus !== "pending") {
-        await finalizeRequestFulfillment({ data: { requestId, partId: inserted.id } });
+      if (requestId && newPartId && submissionStatus !== "pending") {
+        await finalizeRequestFulfillment({ data: { requestId, partId: newPartId } });
       }
       clearUploadDraft();
       setSubmittedStatus(submissionStatus);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong. Try again.");
+      const detail =
+        typeof err === "object" && err !== null && "message" in err
+          ? String((err as { message?: unknown }).message)
+          : "";
+      toast.error(
+        detail
+          ? `Couldn't save your submission: ${detail}`
+          : "Couldn't save your submission. Check your connection and try again.",
+      );
+      console.error("[upload] submission failed", err);
+
     } finally {
       setSubmitting(false);
     }
