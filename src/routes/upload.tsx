@@ -506,7 +506,15 @@ function UploadPage() {
             : "pending"
         : "pending";
 
-      const { data: inserted, error } = await supabase.from("parts").insert({
+      // Generate the id client-side: pending/private rows are not readable by
+      // their submitter, so asking PostgREST to return the inserted row fails RLS.
+      const newPartId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : undefined;
+
+      const { error } = await supabase.from("parts").insert({
+        ...(newPartId ? { id: newPartId } : {}),
         request_id: requestId ?? null,
         name: name.trim(),
         description: description.trim(),
