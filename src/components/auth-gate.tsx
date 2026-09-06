@@ -1,6 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
+import { UsernameForm } from "@/components/username-form";
+
 
 /** Current path + query, used so sign-in can return the user where they were. */
 export function useReturnTo(): string {
