@@ -54,12 +54,14 @@ export const Route = createFileRoute("/upload")({
   component: UploadRoute,
 });
 
-/** Uploading requires an account; browsing the library does not. */
+/** Uploading requires an account and a username; browsing the library does not. */
 function UploadRoute() {
   const { session, loading } = useAuth();
-  if (loading) return null;
-  if (!session) {
+  const { username, loading: profileLoading } = useProfile();
+  if (loading || profileLoading) return null;
+  if (!session || !username) {
     return (
+
       <SiteShell>
         <div className="mx-auto w-full max-w-3xl px-5 py-16">
           <AuthGate
