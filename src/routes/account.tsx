@@ -6,6 +6,8 @@ import { SiteShell } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyAccess, submitAdminRequest } from "@/lib/admin-access.functions";
+import { useProfile } from "@/hooks/use-profile";
+import { UsernameForm } from "@/components/username-form";
 
 export const Route = createFileRoute("/account")({
   ssr: false,
@@ -34,6 +36,7 @@ function AccountPage() {
   const router = useRouter();
   const qc = useQueryClient();
   const { session, email, loading } = useAuth();
+  const { username, loading: profileLoading } = useProfile();
   const [reason, setReason] = useState("");
 
   useEffect(() => {
@@ -86,7 +89,24 @@ function AccountPage() {
           {isAdmin ? "Role: admin" : "Role: community member"}
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <section className="mt-10 border-t border-border pt-8">
+          <h2 className="font-display text-xl font-semibold tracking-tight">Username</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {profileLoading
+              ? "Loading…"
+              : username
+                ? "This is the name shown publicly next to your uploads and requests."
+                : "You need a username before you can upload or post a request."}
+          </p>
+          {!profileLoading && (
+            <UsernameForm
+              initial={username ?? ""}
+              submitLabel={username ? "Update username" : "Save username"}
+            />
+          )}
+        </section>
+
+        <div className="mt-10 flex flex-wrap gap-3">
           {isAdmin && (
             <Link
               to="/admin"
