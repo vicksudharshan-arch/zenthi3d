@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 
 import {
   AftermarketNumberFields,
@@ -177,7 +178,6 @@ function UploadPage() {
   });
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [uploader, setUploader] = useState("");
   const [contributorTypes, setContributorTypes] = useState<ContributorType[]>([]);
   const [category, setCategory] = useState<Category>("bracket_mount");
   const [referenceOnly, setReferenceOnly] = useState(false);
@@ -217,7 +217,6 @@ function UploadPage() {
     if (draft) {
       setName(draft.name ?? "");
       setDescription(draft.description ?? "");
-      setUploader(draft.uploader ?? "");
       setContributorTypes(draft.contributorTypes ?? []);
       setCategory((draft.category as Category) ?? "bracket_mount");
       setReferenceOnly(!!draft.referenceOnly);
@@ -257,7 +256,6 @@ function UploadPage() {
       saveUploadDraft({
         name,
         description,
-        uploader,
         contributorTypes,
         category,
         referenceOnly,
@@ -281,7 +279,6 @@ function UploadPage() {
   }, [
     name,
     description,
-    uploader,
     contributorTypes,
     category,
     referenceOnly,
@@ -530,7 +527,7 @@ function UploadPage() {
         oem_part_numbers: oemNumbers.trim() || null,
         aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
         notes: notes.trim() || null,
-        uploader_name: uploader.trim() || null,
+        uploader_name: username,
         step_files: stepUploads,
         stl_files: stlUploads,
         step_file_path: stepUploads[0]?.path ?? null,
@@ -1239,18 +1236,6 @@ function UploadPage() {
                 How you solved it, print settings, tips for getting it to fit — anything useful for
                 the next person.
               </p>
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="uploader">
-                Your name or handle
-              </label>
-              <input
-                id="uploader"
-                required
-                value={uploader}
-                onChange={(e) => setUploader(e.target.value)}
-                className={fieldCls}
-              />
             </div>
             <div>
               <span className={labelCls} id="contributorType-label">
