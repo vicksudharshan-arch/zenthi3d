@@ -1,6 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
+import { UsernameForm } from "@/components/username-form";
+
 
 /** Current path + query, used so sign-in can return the user where they were. */
 export function useReturnTo(): string {
@@ -62,5 +65,37 @@ export function AuthGate({
     );
   }
 
+  return <UsernameRequired>{children}</UsernameRequired>;
+}
+
+/** A username is the public identity on every contribution, so it can't be skipped. */
+function UsernameRequired({ children }: { children: ReactNode }) {
+  const { username, loading } = useProfile();
+
+  if (loading) {
+    return (
+      <div className="rounded-sm border border-border bg-card p-6 text-sm text-muted-foreground">
+        Checking your account…
+      </div>
+    );
+  }
+
+  if (!username) {
+    return (
+      <div className="rounded-sm border border-border bg-card p-6 sm:p-8">
+        <p className="tech-label text-brass">One more step</p>
+        <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight">
+          Choose your username
+        </h2>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+          This is the name shown publicly next to anything you upload, request or fulfil. You can
+          change it later on your account page.
+        </p>
+        <UsernameForm submitLabel="Save username" />
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
+

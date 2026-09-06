@@ -5,7 +5,9 @@ const DRAFT_KEY = "zenthi-upload-draft-v1";
 export type UploadDraft = {
   name: string;
   description: string;
-  uploader: string;
+  /** Legacy field from before usernames; ignored on restore. */
+  uploader?: string;
+
   contributorTypes: ContributorType[];
   category: string;
   referenceOnly: boolean;

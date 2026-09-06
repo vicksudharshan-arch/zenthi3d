@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 
 import {
   AftermarketNumberFields,
@@ -54,12 +55,14 @@ export const Route = createFileRoute("/upload")({
   component: UploadRoute,
 });
 
-/** Uploading requires an account; browsing the library does not. */
+/** Uploading requires an account and a username; browsing the library does not. */
 function UploadRoute() {
   const { session, loading } = useAuth();
-  if (loading) return null;
-  if (!session) {
+  const { username, loading: profileLoading } = useProfile();
+  if (loading || profileLoading) return null;
+  if (!session || !username) {
     return (
+
       <SiteShell>
         <div className="mx-auto w-full max-w-3xl px-5 py-16">
           <AuthGate
@@ -167,6 +170,7 @@ function SelectedFileList({
 
 
 function UploadPage() {
+  const { username } = useProfile();
   const { requestId } = Route.useSearch();
   const { data: requestSummary } = useQuery({
     queryKey: ["request-summary", requestId],
@@ -175,7 +179,6 @@ function UploadPage() {
   });
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [uploader, setUploader] = useState("");
   const [contributorTypes, setContributorTypes] = useState<ContributorType[]>([]);
   const [category, setCategory] = useState<Category>("bracket_mount");
   const [referenceOnly, setReferenceOnly] = useState(false);
@@ -215,7 +218,6 @@ function UploadPage() {
     if (draft) {
       setName(draft.name ?? "");
       setDescription(draft.description ?? "");
-      setUploader(draft.uploader ?? "");
       setContributorTypes(draft.contributorTypes ?? []);
       setCategory((draft.category as Category) ?? "bracket_mount");
       setReferenceOnly(!!draft.referenceOnly);
@@ -255,7 +257,6 @@ function UploadPage() {
       saveUploadDraft({
         name,
         description,
-        uploader,
         contributorTypes,
         category,
         referenceOnly,
@@ -279,7 +280,6 @@ function UploadPage() {
   }, [
     name,
     description,
-    uploader,
     contributorTypes,
     category,
     referenceOnly,
@@ -528,7 +528,7 @@ function UploadPage() {
         oem_part_numbers: oemNumbers.trim() || null,
         aftermarket_part_numbers: aftermarket.filter((r) => r.brand.trim() || r.number.trim()),
         notes: notes.trim() || null,
-        uploader_name: uploader.trim() || null,
+        uploader_name: username,
         step_files: stepUploads,
         stl_files: stlUploads,
         step_file_path: stepUploads[0]?.path ?? null,
@@ -651,6 +651,10 @@ function UploadPage() {
             </button>
           </div>
         )}
+
+        <p className="mt-8 rounded-sm border border-border bg-secondary/50 px-4 py-3 font-mono text-xs text-muted-foreground">
+          Uploading as <span className="text-foreground">{username}</span>
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-10">
           {requestId && (
@@ -1237,18 +1241,6 @@ function UploadPage() {
                 How you solved it, print settings, tips for getting it to fit — anything useful for
                 the next person.
               </p>
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="uploader">
-                Your name or handle
-              </label>
-              <input
-                id="uploader"
-                required
-                value={uploader}
-                onChange={(e) => setUploader(e.target.value)}
-                className={fieldCls}
-              />
             </div>
             <div>
               <span className={labelCls} id="contributorType-label">

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { SiteShell } from "@/components/site-shell";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { DRIVETRAINS, RESTRICTED_MAKE_MESSAGE, isRestrictedMake } from "@/lib/parts";
 import {
@@ -81,7 +82,7 @@ function detailLine(r: RequestRow) {
 
 function RequestsPage() {
   const qc = useQueryClient();
-  const [name, setName] = useState("");
+  const { username } = useProfile();
   const [contact, setContact] = useState("");
   const [description, setDescription] = useState("");
   const [fileType, setFileType] = useState<string>("Either");
@@ -172,7 +173,7 @@ function RequestsPage() {
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    if (!name.trim()) { toast.error("Add your name or handle."); return; }
+    if (!username) { toast.error("Pick a username before posting."); return; }
     if (!description.trim()) { toast.error("Describe the part you need."); return; }
     if (isRestrictedMake(make)) { toast.error(RESTRICTED_MAKE_MESSAGE); return; }
     const bountyValue = bounty.trim() ? Number(bounty.trim()) : null;
@@ -182,7 +183,7 @@ function RequestsPage() {
     setSubmitting(true);
     try {
       const { error } = await supabase.from("requests").insert({
-        requester_name: name.trim(),
+        requester_name: username,
         requester_contact: contact.trim() || null,
         part_description: description.trim(),
         file_type_needed: fileType,
@@ -245,17 +246,10 @@ function RequestsPage() {
           <form onSubmit={handleSubmit} className="mt-6 space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="req-name" className={labelCls}>
-                  Your name or handle
-                </label>
-                <input
-                  id="req-name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={fieldCls}
-                  placeholder="e.g. tunnelrat_87"
-                />
+                <span className={labelCls}>Posting as</span>
+                <p className="mt-2 rounded-sm border border-border bg-secondary/50 px-3 py-2 font-mono text-sm text-foreground">
+                  {username}
+                </p>
               </div>
               <div>
                 <label htmlFor="req-contact" className={labelCls}>
