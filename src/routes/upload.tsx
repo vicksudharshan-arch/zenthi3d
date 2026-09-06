@@ -170,6 +170,7 @@ function SelectedFileList({
 
 
 function UploadPage() {
+  const { username } = useProfile();
   const { requestId } = Route.useSearch();
   const { data: requestSummary } = useQuery({
     queryKey: ["request-summary", requestId],
@@ -650,6 +651,10 @@ function UploadPage() {
             </button>
           </div>
         )}
+
+        <p className="mt-8 rounded-sm border border-border bg-secondary/50 px-4 py-3 font-mono text-xs text-muted-foreground">
+          Uploading as <span className="text-foreground">{username}</span>
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-10">
           {requestId && (
